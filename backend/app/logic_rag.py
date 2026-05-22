@@ -475,7 +475,7 @@ class BrainSystem:
 
         # 4. Build language-specific FULL prompt
         if lang == "RU":
-            offtopic_note = "КРИТИЧЕСКИ ВАЖНО: Если вопрос НЕ является вопросом об экологии, строительстве, экспертизе, категориях объектов, постановлениях, нормативах или законах об экологической экспертизе — ОБЯЗАТЕЛЬНО ответь: 'Извините, я эксперт только по экологическому законодательству Республики Узбекистан.' НЕ используй контекст из базы знаний для ответа на нерелевантные вопросы. Примеры нерелевантных вопросов: благодарности, приветствия, личные вопросы, общие знания, шутки, математика."
+            offtopic_note = "КРИТИЧЕСКИ ВАЖНО: Если вопрос НЕ является вопросом об экологии, строительстве, экспертизе, категориях объектов, постановлениях, нормативах или законах об экологической экспертизе — ОБЯЗАТЕЛЬНО ответь: 'Kechirasiz, men bu savolga javob bera olmayman. Men Vazirlar Mahkamasining 541 hamda 1036-qarorlariga muvofiq javob beraman. Hohlasangiz operatorlar bilan bog\\'laning: 📞 Tel: +998 71 203 03 04' НЕ используй контекст из базы знаний для ответа на нерелевантные вопросы. Примеры нерелевантных вопросов: благодарности, приветствия, личные вопросы, общие знания, шутки, математика."
             rag_prompt = f"""Ты — эксперт по экологическому законодательству Республики Узбекистан (Постановление КМ №541, Закон об экологической экспертизе №1036, нормативы экологической экспертизы).
 
 КОНТЕКСТ ИЗ БАЗЫ ЗНАНИЙ:
@@ -501,9 +501,9 @@ class BrainSystem:
 ОТВЕТ:
 """
         else:
-            offtopic_note_uz = "MUHIM: Agar savol ekologiya, qurilish, ekspertiza, obyektlar toifasi, qonunlar yoki normativ hujjatlarga ALOQADOR BO'LMASA — ALBATTA javob ber: 'Kechirasiz, men faqat O'zbekiston Respublikasining ekologik qonunchiligi bo'yicha ekspertman.' Kontekstdagi ma'lumotlarni ALOQASIZ savollarga javob berish uchun ISHLATMA."
+            offtopic_note_uz = "MUHIM: Agar savol ekologiya, qurilish, ekspertiza, obyektlar toifasi, qonunlar yoki normativ hujjatlarga ALOQADOR BO'LMASA — ALBATTA javob ber: 'Kechirasiz, men bu savolga javob bera olmayman. Men Vazirlar Mahkamasining 541 hamda 1036-qarorlariga muvofiq javob beraman. Hohlasangiz operatorlar bilan bog\\'laning: 📞 Tel: +998 71 203 03 04' Kontekstdagi ma'lumotlarni ALOQASIZ savollarga javob berish uchun ISHLATMA."
             if lang == "UZ_CYRL":
-                offtopic_note_uz = "Агар савол олдинги суҳбатнинг давоми ёки аниқлаштириш бўлса ва контекстдан тушуниш мумкин бўлса — нормал жавоб бер. Агар савол ЯҚҚОЛ экология, қурилиш, экспертиза ёки норматившларга АЛОҚАДОР БЎЛМАСА — жавоб бер: 'Кечирасиз, мен фақат Ўзбекистон Республикасининг экологик қонунчилиги бўйича экспертман.'"
+                offtopic_note_uz = "Агар савол олдинги суҳбатнинг давоми ёки аниқлаштириш бўлса ва контекстдан тушуниш мумкин бўлса — нормал жавоб бер. Агар савол ЯҚҚОЛ экология, қурилиш, экспертиза ёки норматившларга АЛОҚАДОР БЎЛМАСА — жавоб бер: 'Kechirasiz, men bu savolga javob bera olmayman. Men Vazirlar Mahkamasining 541 hamda 1036-qarorlariga muvofiq javob beraman. Hohlasangiz operatorlar bilan bog\\'laning: 📞 Tel: +998 71 203 03 04'"
             lang_instruction = "JAVOBNI FAQAT O'ZBEK TILIDA (LOTIN ALIFBOSIDA) BER." if lang != "UZ_CYRL" else "ЖАВОБНИ ФАҚАТ ЎЗБЕК ТИЛИДА (КИРИЛЛ АЛИФБОСИДА) БЕР."
             rag_prompt = f"""Sen O'zbekiston Respublikasining ekologik qonunchiligi bo'yicha ekspertsan (VM 541-sonli qaror, Ekologik ekspertiza to'g'risidagi qonun, ekologik normativlar).
 
@@ -614,9 +614,9 @@ JAVOB:
 """
         else:
             lang_instruction = "JAVOBNI FAQAT O'ZBEK TILIDA (LOTIN ALIFBOSIDA) BER." if lang != "UZ_CYRL" else "ЖАВОБНИ ФАҚАТ ЎЗБЕК ТИЛИДА (КИРИЛЛ АЛИФБОСИДА) БЕР."
-            offtopic_note_uz = "MUHIM: Agar savol ekologiya, qurilish, ekspertiza, obyektlar toifasi, qonunlar yoki normativ hujjatlarga ALOQADOR BO'LMASA — ALBATTA javob ber: 'Kechirasiz, men faqat O'zbekiston Respublikasining ekologik qonunchiligi bo'yicha ekspertman.' Kontekstdagi ma'lumotlarni ALOQASIZ savollarga javob berish uchun ISHLATMA."
+            offtopic_note_uz = "MUHIM: Agar savol ekologiya, qurilish, ekspertiza, obyektlar toifasi, qonunlar yoki normativ hujjatlarga ALOQADOR BO'LMASA — ALBATTA javob ber: 'Kechirasiz, men bu savolga javob bera olmayman. Men Vazirlar Mahkamasining 541 hamda 1036-qarorlariga muvofiq javob beraman. Hohlasangiz operatorlar bilan bog\\'laning: 📞 Tel: +998 71 203 03 04' Kontekstdagi ma'lumotlarni ALOQASIZ savollarga javob berish uchun ISHLATMA."
             if lang == "UZ_CYRL":
-                offtopic_note_uz = "Агар савол олдинги суҳбатнинг давоми ёки аниқлаштириш бўлса ва контекстдан тушуниш мумкин бўлса — нормал жавоб бер. Агар савол ЯҚҚОЛ экология, қурилиш, экспертиза ёки норматившларга АЛОҚАДОР БЎЛМАСА — жавоб бер: 'Кечирасиз, мен фақат Ўзбекистон Республикасининг экологик қонунчилиги бўйича экспертман.'"
+                offtopic_note_uz = "Агар савол олдинги суҳбатнинг давоми ёки аниқлаштириш бўлса ва контекстдан тушуниш мумкин бўлса — нормал жавоб бер. Агар савол ЯҚҚОЛ экология, қурилиш, экспертиза ёки норматившларга АЛОҚАДОР БЎЛМАСА — жавоб бер: 'Kechirasiz, men bu savolga javob bera olmayman. Men Vazirlar Mahkamasining 541 hamda 1036-qarorlariga muvofiq javob beraman. Hohlasangiz operatorlar bilan bog\\'laning: 📞 Tel: +998 71 203 03 04'"
 
             rag_prompt = f"""Sen O'zbekiston Respublikasining ekologik qonunchiligi bo'yicha ekspertsan (VM 541-sonli qaror, Ekologik ekspertiza to'g'risidagi qonun, ekologik normativlar).
 
