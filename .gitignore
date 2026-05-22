@@ -1,0 +1,36 @@
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+key/
+backend/gen-lang-client-*.json
+*.pem
+*.key
+
+# Python
+backend/venv/
+__pycache__/
+*.pyc
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Tools & Logs
+cloudflared.exe
+tunnel*.txt
+tunnel*.log
+*.log
+
+# IDE / System
+.opencode/
+.claude/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Temp fix scripts
+fix_*.py

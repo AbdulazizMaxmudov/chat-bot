@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eco Voice | Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f0f23;
+            --bg-secondary: #1a1a2e;
+            --bg-card: #16213e;
+            --text-primary: #e8e8f0;
+            --text-secondary: #a0a0b0;
+            --accent: #00d4aa;
+            --accent-dim: rgba(0, 212, 170, 0.15);
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), #00a8ff);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .metric-unit {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-left: 4px;
+        }
+
+        .metric-change {
+            font-size: 0.75rem;
+            margin-top: 8px;
+            color: var(--text-secondary);
+        }
+
+        .sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .sections {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+
+        .logs-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .log-item {
+            display: grid;
+            grid-template-columns: 70px 60px 1fr 80px;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .log-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .log-time {
+            color: var(--text-secondary);
+            font-family: monospace;
+        }
+
+        .log-intent {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .intent-ecology {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .intent-greeting {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+
+        .intent-offtopic {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .intent-identity {
+            background: rgba(168, 85, 247, 0.2);
+            color: #a855f7;
+        }
+
+        .log-query {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .log-tokens {
+            text-align: right;
+            color: var(--text-secondary);
+            font-family: monospace;
+        }
+
+        .balance-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
+        .balance-service {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .balance-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .gemini-icon {
+            background: linear-gradient(135deg, #4285f4, #34a853);
+        }
+
+        .azure-icon {
+            background: linear-gradient(135deg, #0078d4, #50e6ff);
+        }
+
+        .balance-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .refresh-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(0, 212, 170, 0.4);
+            transition: transform 0.2s;
+        }
+
+        .refresh-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .refresh-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: #000;
+        }
+
+        .spinning {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard">
+        <header>
+            <div class="logo">
+                <h1>🌿 Eco Voice Admin</h1>
+            </div>
+            <div class="status-badge">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Connecting...</span>
+            </div>
+        </header>
+
+        <div class="metrics-grid" id="metricsGrid">
+            <div class="metric-card">
+                <div class="metric-label">Requests Today</div>
+                <div class="metric-value" id="requestsToday">-</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Tokens Today</div>
+                <div class="metric-value" id="tokensToday">-</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Cost Today</div>
+                <div class="metric-value">$<span id="costToday">-</span></div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">TPM</div>
+                <div class="metric-value" id="tpm">-</div>
+                <div class="metric-change" id="tpmPercent">of 2M limit</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">RPM</div>
+                <div class="metric-value" id="rpm">-</div>
+            </div>
+        </div>
+
+        <div class="sections">
+            <div class="section">
+                <h2 class="section-title">Recent Queries</h2>
+                <div class="logs-list" id="logsList">
+                    <div class="empty-state">Loading...</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">API Balances</h2>
+                <div id="balances">
+                    <div class="balance-row">
+                        <div class="balance-service">
+                            <div class="balance-icon gemini-icon">G</div>
+                            <div>
+                                <div style="font-weight: 600;">Google Gemini</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary);">Free Tier</div>
+                            </div>
+                        </div>
+                        <div class="balance-value" id="geminiBalance">♾️ Unlimited</div>
+                    </div>
+                    <div class="balance-row">
+                        <div class="balance-service">
+                            <div class="balance-icon azure-icon">A</div>
+                            <div>
+                                <div style="font-weight: 600;">Azure Speech</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary);">STT + TTS</div>
+                            </div>
+                        </div>
+                        <div class="balance-value" id="azureSpeechStatus">-</div>
+                    </div>
+                </div>
+
+                <h2 class="section-title" style="margin-top: 24px;">Intent Distribution</h2>
+                <div id="intentStats" style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <!-- Filled by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="refresh-btn" onclick="refreshAll()" title="Refresh">
+        <svg id="refreshIcon" viewBox="0 0 24 24">
+            <path
+                d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+        </svg>
+    </button>
+
+    <script>
+        const API_BASE = window.location.origin;
+
+        async function fetchStats() {
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/stats/summary`);
+                const data = await res.json();
+
+                document.getElementById('requestsToday').textContent = data.today?.requests?.toLocaleString() || '0';
+                document.getElementById('tokensToday').textContent = data.today?.tokens?.toLocaleString() || '0';
+                document.getElementById('costToday').textContent = data.today?.cost_usd?.toFixed(4) || '0.0000';
+                document.getElementById('tpm').textContent = data.realtime?.tpm?.toLocaleString() || '0';
+                document.getElementById('tpmPercent').textContent = `${((data.realtime?.tpm || 0) / 2000000 * 100).toFixed(3)}% of 2M`;
+                document.getElementById('rpm').textContent = data.realtime?.rpm || '0';
+
+                // Intent stats
+                const intentStats = document.getElementById('intentStats');
+                intentStats.innerHTML = '';
+                const intents = data.intents || {};
+                for (const [intent, count] of Object.entries(intents)) {
+                    const div = document.createElement('div');
+                    div.className = `log-intent intent-${intent.toLowerCase()}`;
+                    div.textContent = `${intent}: ${count}`;
+                    intentStats.appendChild(div);
+                }
+
+                updateStatus(true);
+            } catch (e) {
+                console.error('Stats error:', e);
+                updateStatus(false);
+            }
+        }
+
+        async function fetchLogs() {
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/logs?limit=20`);
+                const data = await res.json();
+
+                const list = document.getElementById('logsList');
+                if (!data.logs || data.logs.length === 0) {
+                    list.innerHTML = '<div class="empty-state">No queries yet</div>';
+                    return;
+                }
+
+                list.innerHTML = data.logs.map(log => `
+                    <div class="log-item">
+                        <span class="log-time">${new Date(log.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span class="log-intent intent-${(log.intent || 'unknown').toLowerCase()}">${log.intent || '?'}</span>
+                        <span class="log-query">${log.query_text || '—'}</span>
+                        <span class="log-tokens">${log.tokens || 0} tok</span>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('Logs error:', e);
+            }
+        }
+
+        async function fetchBalance() {
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/balance`);
+                const data = await res.json();
+
+                const azureEl = document.getElementById('azureSpeechStatus');
+                if (data.azure_speech?.status === 'configured') {
+                    azureEl.textContent = data.azure_speech.region || 'Configured';
+                    azureEl.style.color = 'var(--accent)';
+                } else {
+                    azureEl.textContent = 'Missing';
+                    azureEl.style.color = 'var(--warning)';
+                }
+            } catch (e) {
+                console.error('Balance error:', e);
+            }
+        }
+
+        function updateStatus(online) {
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+            if (online) {
+                dot.style.background = 'var(--success)';
+                text.textContent = 'Online';
+            } else {
+                dot.style.background = 'var(--danger)';
+                text.textContent = 'Offline';
+            }
+        }
+
+        async function refreshAll() {
+            const icon = document.getElementById('refreshIcon');
+            icon.classList.add('spinning');
+
+            await Promise.all([fetchStats(), fetchLogs(), fetchBalance()]);
+
+            setTimeout(() => icon.classList.remove('spinning'), 500);
+        }
+
+        // Initial load
+        refreshAll();
+
+        // Auto-refresh every 30 seconds
+        setInterval(refreshAll, 30000);
+    </script>
+</body>
+
+</html>

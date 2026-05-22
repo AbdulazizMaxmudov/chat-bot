@@ -1,0 +1,58 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+    container_name: eco-voice-web
+    ports:
+      - "8003:80"
+    depends_on:
+      - backend
+    restart: always
+
+  backend:
+    build:
+      context: ./backend
+    container_name: eco-voice-api
+    ports:
+      - "8002:8000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://ecovoice:ecovoice_password@postgres:5432/ecovoice_analytics}
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
+    volumes:
+      - ./backend/541.txt:/app/541.txt
+      - ./backend/app:/app/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: always
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: eco-voice-db
+    environment:
+      POSTGRES_USER: ecovoice
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ecovoice_password}
+      POSTGRES_DB: ecovoice_analytics
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ecovoice -d ecovoice_analytics" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: eco-voice-tunnel
+    command: tunnel --url http://frontend:80
+    depends_on:
+      - frontend
+    restart: always
+
+volumes:
+  postgres_data:
