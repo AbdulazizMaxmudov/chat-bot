@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Mic, Send, StopCircle, Loader2, Phone, Globe, Instagram, Youtube, Zap, Square, Volume2, VolumeX, Bot, MessageSquare, MapPin, Menu, X, ChevronRight } from 'lucide-react';
+import { Mic, ArrowUp, StopCircle, Loader2, Globe, Instagram, Youtube, Square, Volume2, VolumeX, Bot, MessageSquare, MapPin, Menu, X, Leaf, FileText, Scale, HelpCircle, Sun, Moon, Palette } from 'lucide-react';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Avatar from './components/Avatar';
 import NierVisualizer from './components/NierVisualizer';
 import MessageBubble from './components/MessageBubble';
@@ -14,7 +15,6 @@ const STATUS_TEXT = {
   speaking: "JAVOB BERMOQDA"
 };
 
-// Social links configuration
 const SOCIAL_LINKS = {
   phone: "tel:+998712030022",
   email: "mailto:info@ecoekspertiza.uz",
@@ -24,12 +24,64 @@ const SOCIAL_LINKS = {
   location: "https://www.google.com/maps/search/Toshkent+sh.,+Mirzo+Ulug'bek+t.,+Sayram+5-tor+k.,+15-uy"
 };
 
-// Telegram SVG Icon component
+const QUICK_ACTIONS = [
+  { label: 'Ekspertiza', query: "Ekologik ekspertiza nima va u qanday amalga oshiriladi?", icon: Leaf },
+  { label: "Qonunlar", query: "Ekologiya bo'yicha asosiy qonunlar va me'yorlar", icon: Scale },
+  { label: 'Hujjatlar', query: "Ekologik ekspertiza uchun qanday hujjatlar kerak?", icon: FileText },
+  { label: 'Yordam', query: "Markazga qanday murojaat qilsa bo'ladi?", icon: HelpCircle },
+];
+
+
+const LOTTIE_URLS = {
+  style1: "https://lottie.host/0641a64a-425c-406a-9e27-acb7871aad4f/LCAyTKu7tB.lottie",
+  style2: "https://lottie.host/28305e56-1b8c-41d7-91af-e6115f082a1a/k3QS5HSdgv.lottie",
+  style3: "https://lottie.host/0641a64a-425c-406a-9e27-acb7871aad4f/LCAyTKu7tB.lottie",
+};
+
 const TelegramIcon = ({ size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
     <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
   </svg>
 );
+
+/* Canvas-based white-background removal for style3 videos */
+const VideoAvatar = ({ avatarState }) => {
+  const canvasRef = useRef(null);
+  const idleRef = useRef(null);
+  const speakRef = useRef(null);
+  const frameRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+    const render = () => {
+      const vid = avatarState === 'speaking' ? speakRef.current : idleRef.current;
+      if (vid && vid.readyState >= 2) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
+        const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const d = img.data;
+        for (let i = 0; i < d.length; i += 4) {
+          /* Oq va och kulrang piksellarni shaffof qilish */
+          if (d[i] > 230 && d[i + 1] > 230 && d[i + 2] > 230) d[i + 3] = 0;
+        }
+        ctx.putImageData(img, 0, 0);
+      }
+      frameRef.current = requestAnimationFrame(render);
+    };
+    render();
+    return () => cancelAnimationFrame(frameRef.current);
+  }, [avatarState]);
+
+  return (
+    <div className="relative w-full h-full">
+      <video ref={idleRef} src="/idle.mp4" autoPlay loop muted playsInline style={{ display: 'none' }} />
+      <video ref={speakRef} src="/speaking.mp4" autoPlay loop muted playsInline style={{ display: 'none' }} />
+      <canvas ref={canvasRef} width={400} height={500} className="w-full h-full" />
+    </div>
+  );
+};
 
 function App() {
   const [messages, setMessages] = useState([]);
@@ -39,16 +91,21 @@ function App() {
   const [isRecording, setIsRecording] = useState(false);
   const [audioStream, setAudioStream] = useState(null);
   const [autoScroll, setAutoScroll] = useState(true);
-  const [showRobot, setShowRobot] = useState(true); // Robot visibility toggle
-  const [soundEnabled, setSoundEnabled] = useState(true); // Sound toggle
-  const [keyboardHeight, setKeyboardHeight] = useState(0); // Keyboard height tracking
-  const [isLoading, setIsLoading] = useState(true); // Loading screen state
-  const [loadingStatus, setLoadingStatus] = useState('SYSTEM_INIT...'); // Dynamic loading text
+  const [showRobot, setShowRobot] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingStatus, setLoadingStatus] = useState('SYSTEM_INIT...');
   const [isRobotVisualReady, setIsRobotVisualReady] = useState(false);
-  const [isFocused, setIsFocused] = useState(false); // Track input focus state
-  const [isMobile, setIsMobile] = useState(false); // Mobile detection
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // Menu toggle
-  const [selectedLang, setSelectedLang] = useState('uz'); // Language selector: 'uz' or 'ru'
+  const [isFocused, setIsFocused] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [selectedLang, setSelectedLang] = useState('uz');
+  const [isDark, setIsDark] = useState(false);
+  const [selectedStyle, setSelectedStyle] = useState('style1');
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDark && selectedStyle === 'style1');
+  }, [isDark, selectedStyle]);
 
   const mediaRecorderRef = useRef(null);
   const chatEndRef = useRef(null);
@@ -61,21 +118,16 @@ function App() {
   const currentAudioUrlRef = useRef(null);
   const activeTtsRequestRef = useRef(null);
 
-  // WebSocket + Web Audio streaming refs
   const wsRef = useRef(null);
   const audioContextRef = useRef(null);
   const audioQueueRef = useRef([]);
   const isPlayingStreamRef = useRef(false);
-  const activeSourceRef = useRef(null); // Track active AudioBufferSourceNode for instant stop
+  const activeSourceRef = useRef(null);
   const streamTextRef = useRef("");
 
   const clearCurrentAudioUrl = () => {
     if (!currentAudioUrlRef.current) return;
-    try {
-      URL.revokeObjectURL(currentAudioUrlRef.current);
-    } catch (e) {
-      console.warn('[Audio] Failed to revoke object URL:', e);
-    }
+    try { URL.revokeObjectURL(currentAudioUrlRef.current); } catch (e) { }
     currentAudioUrlRef.current = null;
   };
 
@@ -96,9 +148,7 @@ function App() {
 
   const finalizeResponseIfSettled = () => {
     if (stopSignalRef.current) return;
-    if (wsRef.current || activeTtsRequestRef.current || isPlayingStreamRef.current || activeSourceRef.current || audioQueueRef.current.length > 0) {
-      return;
-    }
+    if (wsRef.current || activeTtsRequestRef.current || isPlayingStreamRef.current || activeSourceRef.current || audioQueueRef.current.length > 0) return;
     setIsResponseActive(false);
     setAvatarState("idle");
   };
@@ -118,7 +168,6 @@ function App() {
 
   const playBlobUntilEnded = async (audioBlob) => {
     if (!soundEnabledRef.current) return;
-
     stopHtmlAudio();
     const audioUrl = URL.createObjectURL(audioBlob);
     currentAudioUrlRef.current = audioUrl;
@@ -126,13 +175,11 @@ function App() {
 
     await new Promise((resolve, reject) => {
       let settled = false;
-
       const cleanupAudioEvents = () => {
         audioPlayerRef.current.onended = null;
         audioPlayerRef.current.onpause = null;
         audioPlayerRef.current.onerror = null;
       };
-
       const finalizePlayback = () => {
         if (settled) return;
         settled = true;
@@ -140,12 +187,8 @@ function App() {
         clearCurrentAudioUrl();
         resolve();
       };
-
       audioPlayerRef.current.onended = finalizePlayback;
-      audioPlayerRef.current.onpause = () => {
-        if (!stopSignalRef.current) return;
-        finalizePlayback();
-      };
+      audioPlayerRef.current.onpause = () => { if (!stopSignalRef.current) return; finalizePlayback(); };
       audioPlayerRef.current.onerror = () => {
         if (settled) return;
         settled = true;
@@ -153,7 +196,6 @@ function App() {
         clearCurrentAudioUrl();
         reject(new Error('[Audio] Playback failed'));
       };
-
       audioPlayerRef.current.play().catch((error) => {
         if (settled) return;
         settled = true;
@@ -167,31 +209,18 @@ function App() {
   const fetchTtsBlob = async (text, lang) => {
     const controller = new AbortController();
     activeTtsRequestRef.current = controller;
-
     try {
       const formData = new FormData();
       formData.append('text', text);
       formData.append('lang', lang);
-
-      const response = await fetch(`${API_URL}/tts`, {
-        method: 'POST',
-        body: formData,
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        throw new Error(`[TTS] Request failed for ${lang}`);
-      }
-
+      const response = await fetch(`${API_URL}/tts`, { method: 'POST', body: formData, signal: controller.signal });
+      if (!response.ok) throw new Error(`[TTS] Request failed for ${lang}`);
       return await response.blob();
     } finally {
-      if (activeTtsRequestRef.current === controller) {
-        activeTtsRequestRef.current = null;
-      }
+      if (activeTtsRequestRef.current === controller) activeTtsRequestRef.current = null;
     }
   };
 
-  // Detect mobile device
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -199,10 +228,8 @@ function App() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // VisualViewport API for keyboard detection
   useEffect(() => {
     if (typeof window === 'undefined' || !window.visualViewport) return;
-
     const handleResize = () => {
       const viewport = window.visualViewport;
       const windowHeight = window.innerHeight;
@@ -210,10 +237,8 @@ function App() {
       const keyboardH = Math.max(0, windowHeight - viewportHeight - viewport.offsetTop);
       setKeyboardHeight(keyboardH);
     };
-
     window.visualViewport.addEventListener('resize', handleResize);
     window.visualViewport.addEventListener('scroll', handleResize);
-
     return () => {
       window.visualViewport.removeEventListener('resize', handleResize);
       window.visualViewport.removeEventListener('scroll', handleResize);
@@ -221,32 +246,24 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (autoScroll) {
-      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
+    if (autoScroll) chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, autoScroll]);
 
-  useEffect(() => {
-    soundEnabledRef.current = soundEnabled;
-  }, [soundEnabled]);
+  useEffect(() => { soundEnabledRef.current = soundEnabled; }, [soundEnabled]);
 
   const handleScroll = (e) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
     const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
-
     if (!isAtBottom) {
       setAutoScroll(false);
       if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-      scrollTimeoutRef.current = setTimeout(() => {
-        setAutoScroll(true);
-      }, 5000);
+      scrollTimeoutRef.current = setTimeout(() => setAutoScroll(true), 5000);
     } else {
       setAutoScroll(true);
       if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
     }
   };
 
-  // --- СТАРТ: ждём бэкенд, потом приветствие ---
   useEffect(() => {
     if (hasGreetedRef.current) return;
     hasGreetedRef.current = true;
@@ -254,88 +271,38 @@ function App() {
     const waitForBackend = async () => {
       const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
       setLoadingStatus('CONNECTING...');
-
-      // Progressive status messages while waiting
       const statusMessages = [
         { delay: 3000, text: 'WAKING_UP_SERVER...' },
         { delay: 8000, text: 'LOADING_AI_MODELS...' },
         { delay: 18000, text: 'INITIALIZING_RAG...' },
         { delay: 30000, text: 'ALMOST_READY...' },
       ];
-      const timers = statusMessages.map(({ delay, text }) =>
-        setTimeout(() => setLoadingStatus(text), delay)
-      );
+      const timers = statusMessages.map(({ delay, text }) => setTimeout(() => setLoadingStatus(text), delay));
 
-      // Ping backend until it responds, but don't leave the user on an endless loading screen.
       let backendReady = false;
       const deadline = Date.now() + 60000;
-
       while (!backendReady && Date.now() < deadline) {
         try {
-          const res = await fetch(`${API_URL}/health`, {
-            cache: 'no-store',
-            signal: AbortSignal.timeout(10000),
-          });
-
-          if (res.ok) {
-            backendReady = true;
-            break;
-          }
-
+          const res = await fetch(`${API_URL}/health`, { cache: 'no-store', signal: AbortSignal.timeout(10000) });
+          if (res.ok) { backendReady = true; break; }
           await sleep(1500);
-        } catch (e) {
-          // Backend not ready yet, wait and retry
-          await sleep(2000);
-        }
+        } catch (e) { await sleep(2000); }
       }
 
-      // Clear status timers
       timers.forEach(t => clearTimeout(t));
 
       if (!backendReady) {
         setLoadingStatus('SERVER_TIMEOUT');
         await sleep(400);
         setIsLoading(false);
-        setMessages([{
-          role: 'ai',
-          text: "Server hozircha javob bermayapti. Birozdan so'ng sahifani yangilang yoki qayta urinib ko'ring."
-        }]);
+        setMessages([{ role: 'ai', text: "Server hozircha javob bermayapti. Birozdan so'ng sahifani yangilang yoki qayta urinib ko'ring." }]);
         setAvatarState("idle");
         return;
       }
 
       setLoadingStatus('READY');
-
-      // Small pause for the "READY" state to show
       await sleep(400);
-
-      // Hide loading screen — backend is alive
       setIsLoading(false);
-
-      // Now play greeting
-      const uzbekText = "Savolingizni bering";
-      const startupRussianText = "\u0417\u0430\u0434\u0430\u0439\u0442\u0435 \u0441\u0432\u043e\u0439 \u0432\u043e\u043f\u0440\u043e\u0441";
-      const russianText = "Задайте свой вопрос";
-      void russianText;
-      const fullText = `${uzbekText} (${startupRussianText})`;
-
-      setMessages([{ role: 'ai', text: fullText }]);
-
-      try {
-        if (soundEnabledRef.current) {
-          setAvatarState("speaking");
-          const [audioBlobUz, audioBlobRu] = await Promise.all([
-            fetchTtsBlob(uzbekText, 'uz'),
-            fetchTtsBlob(startupRussianText, 'ru'),
-          ]);
-
-          await playBlobUntilEnded(audioBlobUz);
-          await playBlobUntilEnded(audioBlobRu);
-        }
-      } catch (e) {
-        console.log('[Startup] TTS error:', e);
-      }
-
       setAvatarState("idle");
     };
     waitForBackend();
@@ -345,17 +312,14 @@ function App() {
     stopSignalRef.current = true;
     abortActiveTtsRequest();
     stopHtmlAudio();
-    // Stop currently playing Web Audio source immediately
     if (activeSourceRef.current) {
       try { activeSourceRef.current.stop(); } catch (e) { }
       activeSourceRef.current = null;
     }
-    // Close WebSocket if active
     if (wsRef.current) {
       try { wsRef.current.close(); } catch (e) { }
       wsRef.current = null;
     }
-    // Clear audio queue
     audioQueueRef.current = [];
     isPlayingStreamRef.current = false;
     setIsResponseActive(false);
@@ -371,7 +335,6 @@ function App() {
     setIsResponseActive(true);
     setAutoScroll(true);
 
-    // Try WebSocket streaming (parallel LLM + TTS)
     const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const backendHost = import.meta.env.VITE_API_URL
       ? new URL(import.meta.env.VITE_API_URL).host
@@ -387,53 +350,39 @@ function App() {
       isPlayingStreamRef.current = false;
       abortActiveTtsRequest();
       stopHtmlAudio();
-
-      // Stop any playing audio from previous session
       if (activeSourceRef.current) {
         try { activeSourceRef.current.stop(); } catch (e) { }
         activeSourceRef.current = null;
       }
 
       ws.onopen = () => {
-        ws.send(JSON.stringify({
-          type: 'text_query',
-          text: userText,
-          lang: selectedLang
-        }));
-        // Add empty AI message for streaming
+        ws.send(JSON.stringify({ type: 'text_query', text: userText, lang: selectedLang }));
         setMessages(prev => [...prev, { role: 'ai', text: "" }]);
       };
 
       ws.onmessage = (event) => {
         if (stopSignalRef.current) { ws.close(); return; }
         const msg = JSON.parse(event.data);
-
         switch (msg.type) {
           case 'llm':
-            // Streaming text chunk — append to AI message
             streamTextRef.current += msg.text;
             upsertLastAiMessage(streamTextRef.current);
             break;
-
           case 'tts':
             if (soundEnabledRef.current && msg.audio) {
               setAvatarState("speaking");
               const binaryStr = atob(msg.audio);
               const bytes = new Uint8Array(binaryStr.length);
-              for (let i = 0; i < binaryStr.length; i++) {
-                bytes[i] = binaryStr.charCodeAt(i);
-              }
+              for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
               audioQueueRef.current.push(bytes);
               playNextAudioChunk();
             }
             break;
-
           case 'done':
             wsRef.current = null;
             ws.close();
             finalizeResponseIfSettled();
             break;
-
           case 'error':
             console.error('[WS-TEXT] Error:', msg.message);
             setIsResponseActive(false);
@@ -446,13 +395,10 @@ function App() {
       ws.onerror = (e) => {
         console.error('[WS-TEXT] Connection error, falling back to REST:', e);
         wsRef.current = null;
-        // Fallback to REST API
         sendTextFallback(userText);
       };
 
-      ws.onclose = () => {
-        wsRef.current = null;
-      };
+      ws.onclose = () => { wsRef.current = null; };
 
     } catch (e) {
       console.error('[WS-TEXT] Failed, falling back to REST:', e);
@@ -460,7 +406,6 @@ function App() {
     }
   };
 
-  // REST fallback for text chat (if WebSocket fails)
   const sendTextFallback = async (userText) => {
     try {
       const formData = new FormData();
@@ -493,60 +438,34 @@ function App() {
       const formData = new FormData();
       formData.append('text', text);
       formData.append('lang', selectedLang);
-      const audioRes = await fetch(`${API_URL}/tts`, {
-        method: 'POST',
-        body: formData,
-        signal: controller.signal,
-      });
-
-      if (!audioRes.ok) {
-        throw new Error(`[TTS] Request failed: ${audioRes.status}`);
-      }
-
+      const audioRes = await fetch(`${API_URL}/tts`, { method: 'POST', body: formData, signal: controller.signal });
+      if (!audioRes.ok) throw new Error(`[TTS] Request failed: ${audioRes.status}`);
       const audioBlob = await audioRes.blob();
-
-      if (activeTtsRequestRef.current === controller) {
-        activeTtsRequestRef.current = null;
-      }
-
-    // Show text instantly (no char-by-char animation — matches voice behavior)
-      if (stopSignalRef.current || !soundEnabledRef.current) {
-        finalizeResponseIfSettled();
-        return;
-      }
-
+      if (activeTtsRequestRef.current === controller) activeTtsRequestRef.current = null;
+      if (stopSignalRef.current || !soundEnabledRef.current) { finalizeResponseIfSettled(); return; }
       setAvatarState("speaking");
       await playBlobUntilEnded(audioBlob);
     } catch (e) {
-      if (e.name !== 'AbortError') {
-        console.error('[TTS] Playback failed:', e);
-      }
+      if (e.name !== 'AbortError') console.error('[TTS] Playback failed:', e);
     } finally {
-      if (activeTtsRequestRef.current === controller) {
-        activeTtsRequestRef.current = null;
-      }
+      if (activeTtsRequestRef.current === controller) activeTtsRequestRef.current = null;
       finalizeResponseIfSettled();
     }
   };
 
-  // --- Web Audio API: queue and play streaming MP3 chunks ---
   const playNextAudioChunk = async () => {
     if (isPlayingStreamRef.current) return;
     if (audioQueueRef.current.length === 0) return;
-
     isPlayingStreamRef.current = true;
     const audioData = audioQueueRef.current.shift();
-
     try {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      }
+      if (!audioContextRef.current) audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
       const ctx = audioContextRef.current;
       const buffer = await ctx.decodeAudioData(audioData.buffer);
       const source = ctx.createBufferSource();
       source.buffer = buffer;
       source.connect(ctx.destination);
-      activeSourceRef.current = source; // Store for instant stop
+      activeSourceRef.current = source;
       source.onended = () => {
         activeSourceRef.current = null;
         isPlayingStreamRef.current = false;
@@ -578,9 +497,7 @@ function App() {
       mediaRecorderRef.current.start();
       setIsRecording(true);
       setAvatarState("listening");
-    } catch (err) {
-      alert("Mikrofonga ruxsat bering!");
-    }
+    } catch (err) { alert("Mikrofonga ruxsat bering!"); }
   };
 
   const stopRecording = () => {
@@ -599,13 +516,11 @@ function App() {
     isPlayingStreamRef.current = false;
     abortActiveTtsRequest();
     stopHtmlAudio();
-    // Stop any playing audio from previous session
     if (activeSourceRef.current) {
       try { activeSourceRef.current.stop(); } catch (e) { }
       activeSourceRef.current = null;
     }
 
-    // Determine WebSocket URL (use backend host when deployed separately)
     const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const backendHost = import.meta.env.VITE_API_URL
       ? new URL(import.meta.env.VITE_API_URL).host
@@ -617,55 +532,42 @@ function App() {
       wsRef.current = ws;
 
       ws.onopen = async () => {
-        // First: send lang_hint as JSON so backend skips FastText
         ws.send(JSON.stringify({ type: 'lang_hint', lang: selectedLang }));
-        // Then: send audio blob as binary
         const arrayBuffer = await audioBlob.arrayBuffer();
         ws.send(arrayBuffer);
       };
 
       ws.onmessage = (event) => {
         if (stopSignalRef.current) { ws.close(); return; }
-
         const msg = JSON.parse(event.data);
-
         switch (msg.type) {
           case 'stt':
             if (msg.is_final && msg.text) {
               setMessages(prev => [...prev, { role: 'user', text: msg.text }]);
               setAvatarState("thinking");
               setAutoScroll(true);
-              // Add empty AI message for streaming
               setMessages(prev => [...prev, { role: 'ai', text: "" }]);
             }
             break;
-
           case 'llm':
-            // Streaming text chunk — append to AI message
             streamTextRef.current += msg.text;
             upsertLastAiMessage(streamTextRef.current);
             break;
-
           case 'tts':
             if (soundEnabledRef.current && msg.audio) {
               setAvatarState("speaking");
-              // Decode base64 audio and queue for playback
               const binaryStr = atob(msg.audio);
               const bytes = new Uint8Array(binaryStr.length);
-              for (let i = 0; i < binaryStr.length; i++) {
-                bytes[i] = binaryStr.charCodeAt(i);
-              }
+              for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
               audioQueueRef.current.push(bytes);
               playNextAudioChunk();
             }
             break;
-
           case 'done':
             wsRef.current = null;
             ws.close();
             finalizeResponseIfSettled();
             break;
-
           case 'error':
             console.error('[WS] Error:', msg.message);
             setIsResponseActive(false);
@@ -678,13 +580,10 @@ function App() {
       ws.onerror = (e) => {
         console.error('[WS] Connection error, falling back to REST:', e);
         wsRef.current = null;
-        // Fallback to REST API
         sendVoiceFallback(audioBlob);
       };
 
-      ws.onclose = () => {
-        wsRef.current = null;
-      };
+      ws.onclose = () => { wsRef.current = null; };
 
     } catch (e) {
       console.error('[WS] Failed to connect, falling back to REST:', e);
@@ -692,7 +591,6 @@ function App() {
     }
   };
 
-  // REST fallback (in case WebSocket fails)
   const sendVoiceFallback = async (audioBlob) => {
     const formData = new FormData();
     formData.append('file', audioBlob, 'voice.webm');
@@ -707,9 +605,7 @@ function App() {
     }
   };
 
-  const toggleRobot = () => {
-    setShowRobot(prev => !prev);
-  };
+  const toggleRobot = () => setShowRobot(prev => !prev);
 
   const toggleSound = () => {
     setSoundEnabled(prev => {
@@ -729,339 +625,333 @@ function App() {
     });
   };
 
-  // Determine if keyboard is open based on height detecting OR focus state
-  // Focus is needed for Telegram/Webviews, Height for native browser resizing detection
   const isKeyboardOpen = isFocused || keyboardHeight > 100;
-
-  // Only apply "Focus Mode" on mobile devices
   const shouldEnterFocusMode = isMobile && isKeyboardOpen;
-  const shouldShowRobotVisual = showRobot && isRobotVisualReady;
+  const isWelcomeView = messages.length === 0;
+  const isImg = selectedStyle !== 'style1';
+  const bgFile = selectedStyle === 'style2' ? 'style2.jpg' : 'style3.png';
 
   return (
-    <div className="flex flex-col h-full w-full bg-main-bg text-white font-sans overflow-hidden relative scanlines">
+    <div
+      className={`flex flex-col h-full w-full font-sans overflow-hidden relative ${
+        isImg ? 'text-white' : 'bg-[#f7f7f8] dark:bg-[#111113] text-gray-900 dark:text-gray-100'
+      }`}
+      style={isImg ? { backgroundImage: `url(/${bgFile})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+    >
 
-      {/* Loading Screen Overlay */}
+      {/* Avatar off-screen */}
+      <div style={{ position: 'absolute', left: -9999, top: -9999, width: 60, height: 60 }}>
+        <Avatar state={avatarState} onReady={() => setIsRobotVisualReady(true)} />
+      </div>
+
+      {/* Loading Screen */}
       <AnimatePresence>
         {isLoading && (
           <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 1.02, filter: "blur(12px)" }}
-            transition={{ duration: 0.6, ease: "easeInOut" }}
-            className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-main-bg/98 backdrop-blur-3xl"
+            initial={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}
+            className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-[#f7f7f8] dark:bg-[#111113]"
           >
-            <div className="relative flex flex-col items-center justify-center">
-              {/* Ambient Glow */}
-              <motion.div
-                animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.4, 0.2] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute w-48 h-48 rounded-full bg-neon-blue/5 blur-3xl"
-              />
-
-              {/* Single Clean Ring */}
-              <div className="relative w-24 h-24 flex items-center justify-center">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-0 rounded-full border-2 border-transparent border-t-neon-blue/60 border-r-neon-blue/20"
-                />
-
-                {/* Center Icon */}
-                <div className="relative z-10 p-3 rounded-full bg-surface-100/80 backdrop-blur-sm border border-white/[0.06]">
-                  <Bot size={28} className="text-neon-blue" />
-                </div>
-              </div>
-            </div>
-
             <motion.div
-              animate={{ opacity: [0.5, 1, 0.5] }}
-              transition={{ duration: 2.5, repeat: Infinity }}
-              className="mt-6 flex flex-col items-center gap-2"
-            >
-              <h2 className="text-lg font-heading font-semibold tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-white to-accent-purple">
-                ECO EXPERT AI
-              </h2>
-              <div className="h-px w-20 bg-white/20" />
-              <p className="text-[10px] font-mono text-neon-blue/50 tracking-widest uppercase">{loadingStatus}</p>
-            </motion.div>
+              animate={{ rotate: 360 }} transition={{ duration: 1.8, repeat: Infinity, ease: 'linear' }}
+              className="w-9 h-9 rounded-full border-2 border-gray-200 dark:border-gray-700 border-t-gray-800 dark:border-t-gray-300 mb-5"
+            />
+            <p className="text-gray-900 dark:text-white font-semibold text-base tracking-tight">ECO EXPERT AI</p>
+            <p className="text-gray-400 text-[11px] mt-1 tracking-widest uppercase">{loadingStatus}</p>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Main Content Wrapper - Fades out when keyboard opens ON MOBILE ONLY */}
-      {/* 1. ХЕДЕР - Extracted & Fixed Z-Index */}
-      <motion.div
-        animate={{ opacity: shouldEnterFocusMode ? 0 : 1 }}
-        transition={{ duration: 0.3 }}
-        className="absolute top-0 left-0 w-full px-6 py-1 sm:py-2 flex justify-between items-start z-[60] pointer-events-none"
-      >
-        {/* Logo & Branding */}
-        <div className="flex items-center gap-0 sm:gap-1 pointer-events-auto -mt-2 -ml-2">
-          <div className="logo-hover">
-            <img src="/logo.png" alt="Logo" className="w-[80px] h-[80px] sm:w-[92px] sm:h-[92px] object-contain transition-all duration-300" />
-          </div>
-          <div className="flex flex-col justify-center translate-x-1 sm:translate-x-0">
-            <h1 className="text-[17px] sm:text-[22px] font-heading font-bold text-white tracking-wide leading-none uppercase transition-all duration-300">
-              ECO EXPERT AI
-            </h1>
-            <p className="text-[7px] sm:text-[10px] font-mono font-medium text-eco-green/80 tracking-widest uppercase mt-1 leading-tight transition-all duration-300">
-              Davlat ekologik ekspertizasi markazi
-            </p>
-          </div>
-        </div>
-
-        {/* Right Side - Unified Menu Button */}
-        <div className="pointer-events-auto relative mt-1">
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Menu"
-            className={`relative z-[70] p-3 sm:p-4 rounded-2xl bg-surface-100/80 backdrop-blur-xl border border-white/[0.06] text-white shadow-[0_8px_32px_rgba(0,0,0,0.4)] cursor-pointer group menu-btn-hover ${isMenuOpen ? 'bg-neon-blue/15 border-neon-blue/40' : 'hover:bg-white/[0.04] hover:border-white/20'}`}
-          >
-            <div className="relative w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center">
-              <AnimatePresence mode='wait'>
-                {isMenuOpen ? (
-                  <motion.div
-                    key="close"
-                    initial={{ rotate: -90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: 90, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <X size={28} />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="menu"
-                    initial={{ rotate: 90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: -90, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Menu size={28} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </button>
-
-          {/* Outside click overlay — closes menu */}
-          {isMenuOpen && (
-            <div
-              className="fixed inset-0 z-[55]"
-              onClick={() => setIsMenuOpen(false)}
-            />
-          )}
-
-          {/* Dropdown Menu Panel */}
-          <AnimatePresence>
-            {isMenuOpen && (
+      {/* Avatar + Greeting — avatar har doim, matn faqat welcome rejimida */}
+      {!isLoading && !shouldEnterFocusMode && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none pb-52">
+          {showRobot && (
+            selectedStyle === 'style3' ? (
+              /* Style3: video avatar — har doim katta, kichraymaydi */
+              <div className="w-[760px] h-[580px] sm:w-[760px] sm:h-[700px] mb-2 ml-10">
+                <VideoAvatar avatarState={avatarState} />
+              </div>
+            ) : (
+              /* Style1/2: lottie — chat rejimida kichrayadi */
               <motion.div
-                initial={{ opacity: 0, y: -20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-                className="absolute top-full right-0 mt-3 w-72 glass-card rounded-3xl overflow-hidden z-[65] p-4 flex flex-col gap-4 scanlines"
+                animate={{
+                  scale: isWelcomeView ? 1 : 0.5,
+                  opacity: isWelcomeView ? 1 : 0.18,
+                }}
+                transition={{ duration: 0.5, ease: 'easeInOut' }}
+                className="w-[403px] h-[403px] sm:w-[448px] sm:h-[448px] mb-4"
               >
-                {/* Toggles Group */}
-                <div className="flex flex-col gap-2">
-                  <button
-                    onClick={toggleRobot}
-                    className={`w-full p-4 rounded-2xl flex items-center justify-between border btn-hover ${showRobot
-                      ? 'bg-neon-blue/10 border-neon-blue/30 text-neon-blue'
-                      : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10'
-                      }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      {showRobot ? <Bot size={24} /> : <MessageSquare size={24} />}
-                      <span className="font-heading tracking-wide text-sm">{showRobot ? 'AVATAR' : 'CHAT'}</span>
-                    </div>
-                    <div className={`w-3 h-3 rounded-full ${showRobot ? 'bg-neon-blue' : 'bg-gray-600'}`}></div>
-                  </button>
-
-                  <button
-                    onClick={toggleSound}
-                    className={`w-full p-4 rounded-2xl flex items-center justify-between border btn-hover ${soundEnabled
-                      ? 'bg-neon-blue/10 border-neon-blue/30 text-neon-blue'
-                      : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10'
-                      }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      {soundEnabled ? <Volume2 size={24} /> : <VolumeX size={24} />}
-                      <span className="font-heading tracking-wide text-sm">{soundEnabled ? 'OVOZ' : 'OVOZSIZ'}</span>
-                    </div>
-                    <div className={`w-3 h-3 rounded-full ${soundEnabled ? 'bg-neon-blue' : 'bg-gray-600'}`}></div>
-                  </button>
+                <DotLottieReact src={LOTTIE_URLS[selectedStyle]} loop autoplay />
+              </motion.div>
+            )
+          )}
+          <AnimatePresence>
+            {isWelcomeView && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.3 }}
+                className="text-center px-4 ml-10"
+              >
+                {/* Matn orqasida shaffof podlozhka — fon rasmida ko'rinishi uchun */}
+                <div className={isImg ? 'inline-block bg-black/35 backdrop-blur-sm rounded-2xl px-5 py-3' : ''}>
+                  <p className={`text-sm sm:text-base mb-1 ${isImg ? 'text-white/80' : 'text-gray-400 dark:text-gray-500'}`}>
+                    Ekologiya bo'yicha maslahat
+                  </p>
+                  <h1 className={`text-2xl sm:text-3xl font-semibold leading-snug ${isImg ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                    Savolingizni <span className="text-purple-300">bering</span>
+                  </h1>
                 </div>
-
-                <div className="h-px bg-white/10 w-full"></div>
-
-                {/* Social Grid */}
-                <div className="grid grid-cols-4 gap-2">
-                  <SocialBtn href={SOCIAL_LINKS.instagram} icon={<Instagram size={20} />} color="pink" />
-                  <SocialBtn href={SOCIAL_LINKS.youtube} icon={<Youtube size={20} />} color="red" />
-                  <SocialBtn href={SOCIAL_LINKS.telegram} icon={<TelegramIcon size={20} />} color="blue" />
-                  <SocialBtn href={SOCIAL_LINKS.location} icon={<MapPin size={20} />} color="green" />
-                </div>
-
-                {/* Call CTA */}
-                <a
-                  href={SOCIAL_LINKS.phone}
-                  className="w-full py-4 bg-gradient-to-r from-neon-blue to-sky-400 rounded-2xl flex items-center justify-center gap-3 text-black font-heading font-semibold cta-btn-hover"
-                >
-                  <Phone size={20} strokeWidth={2.5} />
-                  <span>QO'NG'IROQ QILISH 22222</span>
-                </a>
-
               </motion.div>
             )}
           </AnimatePresence>
         </div>
-      </motion.div>
+      )}
 
-      {/* 2. РОБОТ (conditional rendering) - Wrapper z-10 */}
-      <motion.div
-        animate={{ opacity: shouldEnterFocusMode ? 0 : 1 }}
-        transition={{ duration: 0.3 }}
-        className={`absolute inset-0 z-10 flex flex-col ${shouldEnterFocusMode ? 'pointer-events-none' : 'pointer-events-auto'}`}
-      >
-        <div className="h-[40%] sm:h-[45%] w-full relative flex flex-col items-center justify-center pt-20 sm:pt-0">
-          <div
-            className={`w-[500px] h-[500px] sm:w-[500px] sm:h-[500px] md:w-[600px] md:h-[600px] lg:w-[800px] lg:h-[800px] relative flex items-center justify-center transition-opacity duration-200 ${shouldShowRobotVisual ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
-            aria-hidden={!shouldShowRobotVisual}
-          >
-            <Avatar state={avatarState} onReady={() => setIsRobotVisualReady(true)} />
-            <div className="absolute inset-0 hole-mask pointer-events-none z-20"></div>
+      {/* Header */}
+      {!isLoading && (
+        <header className={`absolute top-0 left-0 right-0 z-20 backdrop-blur-sm border-b px-4 sm:px-6 py-3.5 flex items-center gap-3 ${
+          isImg ? 'bg-black/30 border-white/10' : 'bg-[#f7f7f8]/95 dark:bg-[#111113]/95 border-gray-200/80 dark:border-gray-700/80'
+        }`}>
+          <div className={`flex-shrink-0 w-12 h-12 rounded-xl border shadow-sm flex items-center justify-center ${
+            isImg ? 'bg-white/15 border-white/20' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'
+          }`}>
+            <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />
           </div>
-        </div>
-      </motion.div>
-
-      {/* 3. ЧАТ - Mobile Optimized */}
-      <div
-        className={`flex-1 flex flex-col bg-transparent relative min-h-0 z-20 transition-all duration-500 ease-out ${shouldEnterFocusMode
-          ? 'mt-0'
-          : (!showRobot ? 'mt-[70px] sm:mt-[80px]' : 'mt-[45vh]')
-          }`}
-      >
-        <div
-          className={`flex-1 overflow-y-auto px-3 sm:px-8 pb-40 pt-4 space-y-3 sm:space-y-4 pr-1 sm:pr-2`}
-          onScroll={handleScroll}
-        >
-          <AnimatePresence>
-            {messages.map((msg, i) => {
-              if (!msg.text) return null;
-              return (
+          <div className="flex-1 min-w-0">
+            <p className={`text-[19px] font-bold leading-none tracking-tight ${isImg ? 'text-white' : 'text-gray-900 dark:text-white'}`}>ECO EXPERT AI</p>
+            <p className={`text-[13px] mt-1 truncate ${isImg ? 'text-white/60' : 'text-gray-400 dark:text-gray-500'}`}>Davlat ekologik ekspertizasi markazi</p>
+          </div>
+          {!isWelcomeView && (
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${
+              avatarState !== 'idle'
+                ? isImg ? 'bg-white/20 text-white' : 'bg-purple-50 dark:bg-purple-900/30 text-purple-500'
+                : isImg ? 'bg-white/10 text-white/50' : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+            }`}>
+              <div className={`w-1.5 h-1.5 rounded-full ${
+                avatarState !== 'idle'
+                  ? isImg ? 'bg-white animate-pulse' : 'bg-purple-400 animate-pulse'
+                  : isImg ? 'bg-white/30' : 'bg-gray-300 dark:bg-gray-600'
+              }`} />
+              <span className="text-[10px] font-medium tracking-wide">{STATUS_TEXT[avatarState]}</span>
+            </div>
+          )}
+          {/* Menu */}
+          <div className="relative">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className={`p-2 rounded-full border transition-colors touch-manipulation ${
+                isMenuOpen
+                  ? isImg ? 'bg-white text-gray-900 border-white' : 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 border-gray-900 dark:border-white'
+                  : isImg ? 'bg-white/15 text-white border-white/20 hover:bg-white/25' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+              }`}
+            >
+              {isMenuOpen ? <X size={15} /> : <Menu size={15} />}
+            </button>
+            {isMenuOpen && <div className="fixed inset-0 z-[55]" onClick={() => setIsMenuOpen(false)} />}
+            <AnimatePresence>
+              {isMenuOpen && (
                 <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  initial={{ opacity: 0, y: 6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 6, scale: 0.97 }} transition={{ duration: 0.15 }}
+                  className={`absolute top-full mt-2 right-0 w-56 rounded-2xl shadow-lg border p-3 z-[65] ${
+                    isImg ? 'bg-black/60 backdrop-blur-xl border-white/15' : 'bg-white dark:bg-[#1c1c1e] border-gray-100 dark:border-gray-700'
+                  }`}
                 >
-                  <MessageBubble text={msg.text} role={msg.role} />
+                  {/* Dark mode — only style1 */}
+                  {!isImg && (
+                    <button onClick={() => setIsDark(d => !d)}
+                      className="w-full px-3 py-2.5 rounded-xl flex items-center justify-between text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                      <div className="flex items-center gap-2.5">
+                        {isDark ? <Sun size={15} className="text-amber-400" /> : <Moon size={15} className="text-gray-500" />}
+                        <span>{isDark ? "Yorug' rejim" : "Qorong'u rejim"}</span>
+                      </div>
+                      <div className={`w-8 h-4 rounded-full flex-shrink-0 transition-colors ${isDark ? 'bg-gray-900 dark:bg-white' : 'bg-gray-200'}`}>
+                        <div className={`w-3 h-3 rounded-full bg-white dark:bg-gray-900 mt-0.5 transition-transform ${isDark ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                      </div>
+                    </button>
+                  )}
+                  {/* Avatar toggle */}
+                  <button onClick={toggleRobot}
+                    className={`w-full px-3 py-2.5 rounded-xl flex items-center justify-between text-sm transition-colors ${
+                      isImg ? 'text-white/90 hover:bg-white/10' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                    }`}>
+                    <div className="flex items-center gap-2.5">
+                      {showRobot ? <Bot size={15} className={isImg ? 'text-white/60' : 'text-gray-500 dark:text-gray-400'} /> : <MessageSquare size={15} className={isImg ? 'text-white/60' : 'text-gray-500 dark:text-gray-400'} />}
+                      <span>{showRobot ? 'Avatar yoqilgan' : "Avatar o'chirilgan"}</span>
+                    </div>
+                    <div className={`w-8 h-4 rounded-full flex-shrink-0 transition-colors ${showRobot ? (isImg ? 'bg-white/80' : 'bg-gray-900 dark:bg-white') : (isImg ? 'bg-white/20' : 'bg-gray-200 dark:bg-gray-700')}`}>
+                      <div className={`w-3 h-3 rounded-full mt-0.5 transition-transform ${showRobot ? 'translate-x-4' : 'translate-x-0.5'} ${isImg ? 'bg-gray-900' : 'bg-white dark:bg-gray-900'}`} />
+                    </div>
+                  </button>
+                  {/* Sound toggle */}
+                  <button onClick={toggleSound}
+                    className={`w-full px-3 py-2.5 rounded-xl flex items-center justify-between text-sm transition-colors ${
+                      isImg ? 'text-white/90 hover:bg-white/10' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                    }`}>
+                    <div className="flex items-center gap-2.5">
+                      {soundEnabled ? <Volume2 size={15} className={isImg ? 'text-white/60' : 'text-gray-500 dark:text-gray-400'} /> : <VolumeX size={15} className={isImg ? 'text-white/60' : 'text-gray-500 dark:text-gray-400'} />}
+                      <span>{soundEnabled ? 'Ovoz yoqilgan' : "Ovoz o'chirilgan"}</span>
+                    </div>
+                    <div className={`w-8 h-4 rounded-full flex-shrink-0 transition-colors ${soundEnabled ? (isImg ? 'bg-white/80' : 'bg-gray-900 dark:bg-white') : (isImg ? 'bg-white/20' : 'bg-gray-200 dark:bg-gray-700')}`}>
+                      <div className={`w-3 h-3 rounded-full mt-0.5 transition-transform ${soundEnabled ? 'translate-x-4' : 'translate-x-0.5'} ${isImg ? 'bg-gray-900' : 'bg-white dark:bg-gray-900'}`} />
+                    </div>
+                  </button>
+                  {/* Divider */}
+                  <div className={`h-px my-2 ${isImg ? 'bg-white/10' : 'bg-gray-100 dark:bg-gray-700'}`} />
+                  {/* Style selector */}
+                  <div className="px-3 py-1">
+                    <div className={`flex items-center gap-2 mb-1.5 ${isImg ? 'text-white/70' : 'text-gray-500 dark:text-gray-400'}`}>
+                      <Palette size={13} />
+                      <span className="text-xs font-medium">Dizayn stili</span>
+                    </div>
+                    <select
+                      value={selectedStyle}
+                      onChange={e => setSelectedStyle(e.target.value)}
+                      style={isImg ? { colorScheme: 'dark' } : undefined}
+                      className={`w-full text-xs rounded-xl px-3 py-2 border outline-none cursor-pointer ${
+                        isImg
+                          ? 'bg-black/40 border-white/20 text-white'
+                          : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'
+                      }`}
+                    >
+                      <option value="style1">Minimalizm</option>
+                      <option value="style2">Hi tech</option>
+                      <option value="style3">Ecology</option>
+                    </select>
+                  </div>
                 </motion.div>
-              );
-            })}
-          </AnimatePresence>
-          <div ref={chatEndRef} />
-        </div>
+              )}
+            </AnimatePresence>
+          </div>
+        </header>
+      )}
+
+      {/* Chat Messages */}
+      <div className="flex-1 overflow-y-auto px-3 sm:px-6 pb-52 space-y-3 pt-[60px]" onScroll={handleScroll}>
+        <AnimatePresence>
+          {messages.map((msg, i) => {
+            if (!msg.text) return null;
+            return (
+              <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <MessageBubble text={msg.text} role={msg.role} />
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+        <div ref={chatEndRef} />
       </div>
 
-      {/* НИЗ - Input Container - Fixed at bottom */}
-      <div className="fixed bottom-0 left-0 w-full z-50 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/[0.08] pb-[env(safe-area-inset-bottom)] transition-all duration-300 ease-out">
-        <div className="flex-none px-2 sm:px-6 pt-2 sm:pt-4 pb-2 sm:pb-6 flex flex-col items-center gap-1.5 sm:gap-4">
-
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1 rounded-full border border-neon-blue/15 bg-surface-100/70 backdrop-blur-md h-full">
-              <Zap size={10} className={`sm:w-3 sm:h-3 flex-shrink-0 ${avatarState !== 'idle' ? "text-neon-blue fill-neon-blue animate-pulse" : "text-gray-500"}`} />
-              <span className="text-[10px] sm:text-[10px] font-heading text-neon-blue tracking-widest leading-none mt-0.5">{STATUS_TEXT[avatarState]}</span>
-            </div>
-
-            {isResponseActive && (
-              <button
-                onClick={stopGeneration}
-                className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-4 py-1.5 sm:py-1 rounded-full border border-red-500/60 bg-red-950/40 text-red-400 hover:bg-red-900/30 danger-btn-hover h-full"
-              >
-                <Square size={10} className="sm:w-2.5 sm:h-2.5 flex-shrink-0" fill="currentColor" />
-                <span className="text-[10px] sm:text-[10px] font-heading tracking-widest leading-none mt-0.5">STOP</span>
-              </button>
-            )}
+      {/* Bottom */}
+      <div className={`fixed bottom-0 left-0 right-0 z-50 px-3 sm:px-6 pb-4 sm:pb-6 pt-2 ${
+        isImg ? 'bg-black/20 backdrop-blur-md' : 'bg-[#f7f7f8]/95 dark:bg-[#111113]/95 backdrop-blur-sm'
+      }`}>
+        {/* Input Card */}
+        <div className={`max-w-2xl mx-auto rounded-2xl border overflow-hidden ${
+          isImg ? 'bg-white/10 backdrop-blur-md border-white/15 shadow-none' : 'bg-white dark:bg-[#1c1c1e] border-gray-200 dark:border-gray-700 shadow-sm'
+        }`}>
+          <div className="px-4 pt-3 pb-1 flex items-center gap-1.5">
+            <span className={`text-[11px] leading-none ${isImg ? 'text-white/50' : 'text-gray-400 dark:text-gray-500'}`}>Davlat ekologik ekspertizasi markazi</span>
+            <span className={`text-[11px] ${isImg ? 'text-white/25' : 'text-gray-300 dark:text-gray-600'}`}>•</span>
+            <span className={`text-[11px] font-medium leading-none transition-colors ${avatarState !== 'idle' ? 'text-purple-400' : isImg ? 'text-white/35' : 'text-gray-400 dark:text-gray-500'}`}>
+              {STATUS_TEXT[avatarState]}
+            </span>
           </div>
-
           {isRecording ? (
-            <div className="w-full max-w-4xl space-y-3 sm:space-y-4 px-2">
-              <NierVisualizer isRecording={isRecording} stream={audioStream} />
-              <button onClick={stopRecording} className="w-full py-3 sm:py-4 bg-red-950/30 text-red-400 border border-red-500/40 rounded-xl flex items-center justify-center gap-2 hover:bg-red-900/25 danger-btn-hover shadow-[0_0_12px_rgba(239,68,68,0.15)]">
-                <StopCircle size={18} className="sm:w-5 sm:h-5 animate-pulse" />
-                <span className="font-heading tracking-widest text-sm sm:text-base">Yozishni to'xtatish</span>
+            <div className="px-4 pb-3 pt-2 space-y-2">
+              <NierVisualizer isRecording={isRecording} stream={audioStream} isDark={isDark || isImg} />
+              <button onClick={stopRecording}
+                className={`w-full py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-colors touch-manipulation border ${
+                  isImg ? 'bg-red-500/20 text-red-300 border-red-400/30 hover:bg-red-500/30' : 'bg-red-50 dark:bg-red-900/20 text-red-500 border-red-100 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30'
+                }`}>
+                <StopCircle size={15} className="animate-pulse" />
+                Yozishni to'xtatish
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 sm:gap-3 max-w-4xl w-full px-0 sm:px-1">
-
-              {/* Language Toggle — flag only, no text */}
-              <button
-                onClick={() => setSelectedLang(l => l === 'uz' ? 'ru' : 'uz')}
-                title={selectedLang === 'uz' ? "O'zbekcha — Ruscha uchun bosing" : "Русский — нажмите для Узбекского"}
-                className="relative flex items-center justify-center overflow-hidden rounded-lg sm:rounded-xl touch-manipulation flag-btn-hover"
-                style={{
-                  width: isMobile ? '40px' : '58px', height: isMobile ? '40px' : '58px', padding: 0, flexShrink: 0,
-                  border: selectedLang === 'uz'
-                    ? '1.5px solid rgba(103,232,249,0.7)'
-                    : '1.5px solid rgba(148,163,184,0.4)',
-                  boxShadow: 'none',
-                  background: '#000',
-                }}
-              >
-                <span
-                  className={`fi fi-${selectedLang === 'uz' ? 'uz' : 'ru'} fis`}
-                  style={{ display: 'block', width: '100%', height: '100%', backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: 'inherit' }}
-                />
-              </button>
-
-              <button onClick={startRecording} aria-label="Start recording" className="p-2.5 sm:p-4 rounded-lg sm:rounded-xl bg-transparent border border-white/[0.15] hover:border-eco-green hover:text-eco-green hover:shadow-glow-green btn-hover group touch-manipulation">
-                <Mic size={isMobile ? 18 : 20} className="sm:w-6 sm:h-6" />
-              </button>
-
+            <>
               <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
+                ref={inputRef} type="text" value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && sendMessage()}
+                onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)}
                 placeholder="Savolingizni yozing..."
-                className="flex-1 min-w-0 bg-transparent border border-white/[0.15] rounded-lg sm:rounded-xl py-2.5 sm:py-4 px-3 sm:px-6 focus:outline-none focus:border-neon-blue focus:shadow-glow-input text-white placeholder-gray-500 transition-shadow duration-200 font-sans text-sm sm:text-base"
+                className={`w-full px-4 py-3 bg-transparent focus:outline-none text-sm sm:text-base ${
+                  isImg ? 'text-white placeholder-white/40' : 'text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-600'
+                }`}
               />
-
-              <button onClick={sendMessage} disabled={!input.trim()} aria-label="Send message" className="p-2.5 sm:p-4 rounded-lg sm:rounded-xl bg-neon-blue/10 border border-neon-blue text-neon-blue font-bold hover:bg-neon-blue hover:text-black disabled:opacity-40 btn-hover touch-manipulation">
-                {avatarState === 'thinking' ? <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" /> : <Send size={isMobile ? 18 : 20} className="sm:w-6 sm:h-6" />}
-              </button>
-            </div>
+              <div className="flex items-center justify-between px-3 pb-3">
+                <button onClick={() => setSelectedLang(l => l === 'uz' ? 'ru' : 'uz')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs transition-colors touch-manipulation ${
+                    isImg ? 'border-white/20 text-white/70 hover:bg-white/10' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                  }`}>
+                  <Globe size={12} />
+                  <span className="font-medium">{selectedLang === 'uz' ? "O'zbekcha" : 'Русский'}</span>
+                </button>
+                <div className="flex items-center gap-1.5">
+                  {isResponseActive && (
+                    <button onClick={stopGeneration} title="To'xtatish"
+                      className={`p-2 rounded-full border transition-colors touch-manipulation ${
+                        isImg ? 'border-white/20 text-white/70 hover:bg-white/10' : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                      }`}>
+                      <Square size={13} fill="currentColor" />
+                    </button>
+                  )}
+                  <button onClick={startRecording} aria-label="Ovoz yozish"
+                    className={`p-2 rounded-full border transition-colors touch-manipulation ${
+                      isImg ? 'border-white/20 text-white/70 hover:bg-white/10' : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                    }`}>
+                    <Mic size={16} />
+                  </button>
+                  <button onClick={sendMessage} disabled={!input.trim()} aria-label="Yuborish"
+                    className={`p-2 rounded-full disabled:opacity-30 transition-colors touch-manipulation ${
+                      isImg ? 'bg-white text-gray-900 hover:bg-white/90' : 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-200'
+                    }`}>
+                    {avatarState === 'thinking' ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowUp size={16} />}
+                  </button>
+                </div>
+              </div>
+            </>
           )}
+        </div>
+
+        {/* Pills */}
+        <div className="max-w-2xl mx-auto mt-2.5 flex items-center gap-2 flex-wrap justify-center">
+          {QUICK_ACTIONS.map(action => (
+            <button key={action.label}
+              onClick={() => { setInput(action.query); setTimeout(() => inputRef.current?.focus(), 0); }}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border text-xs transition-colors touch-manipulation ${
+                isImg ? 'border-white/20 bg-white/10 text-white hover:bg-white/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1c1c1e] text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+              }`}>
+              <action.icon size={12} />
+              <span>{action.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Social + Disclaimer */}
+        <div className="max-w-2xl mx-auto mt-2 flex items-center justify-between px-1">
+          <div className="flex items-center gap-0.5">
+            {[
+              { href: SOCIAL_LINKS.instagram, icon: <Instagram size={14} /> },
+              { href: SOCIAL_LINKS.youtube, icon: <Youtube size={14} /> },
+              { href: SOCIAL_LINKS.telegram, icon: <TelegramIcon size={14} /> },
+              { href: SOCIAL_LINKS.location, icon: <MapPin size={14} /> },
+            ].map(({ href, icon }) => (
+              <a key={href} href={href} target="_blank" rel="noopener noreferrer"
+                className={`p-1.5 rounded-lg transition-colors touch-manipulation ${
+                  isImg ? 'text-white/40 hover:text-white hover:bg-white/10' : 'text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                }`}>
+                {icon}
+              </a>
+            ))}
+          </div>
+          <p className={`text-[10px] ${isImg ? 'text-white/30' : 'text-gray-400 dark:text-gray-600'}`}>AI xato qilishi mumkin</p>
         </div>
       </div>
     </div>
   );
 }
-
-const SocialBtn = ({ icon, href, tooltip, color }) => {
-  const colorClasses = {
-    pink: 'social-hover-pink text-pink-500',
-    red: 'social-hover-red text-red-500',
-    blue: 'social-hover-blue text-sky-500',
-    green: 'social-hover-green text-emerald-500',
-  };
-
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={`p-2 sm:p-2.5 text-gray-500 rounded-xl social-btn-hover touch-manipulation ${colorClasses[color] || 'hover:text-neon-blue'}`}
-      title={tooltip}
-    >
-      {icon}
-    </a>
-  );
-};
 
 export default App;

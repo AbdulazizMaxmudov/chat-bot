@@ -1,532 +1,547 @@
 <!DOCTYPE html>
-<html lang="ru">
-
+<html lang="uz">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eco Voice | Admin Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-primary: #0f0f23;
-            --bg-secondary: #1a1a2e;
-            --bg-card: #16213e;
-            --text-primary: #e8e8f0;
-            --text-secondary: #a0a0b0;
-            --accent: #00d4aa;
-            --accent-dim: rgba(0, 212, 170, 0.15);
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --success: #10b981;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ECO EXPERT AI — Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #f7f7f8; color: #111; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    .dashboard { max-width: 1300px; margin: 0 auto; padding: 32px 24px; }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    /* Header */
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #fed7aa, #f9a8d4, #c084fc); flex-shrink: 0; }
+    .logo h1 { font-size: 1rem; font-weight: 600; color: #111; }
+    .logo span { font-size: 0.75rem; color: #999; }
+    .status-badge { display: flex; align-items: center; gap: 6px; padding: 6px 14px; background: #fff; border: 1px solid #e5e7eb; border-radius: 20px; font-size: 0.8rem; color: #555; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #10b981; flex-shrink: 0; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            min-height: 100vh;
-        }
+    /* Metrics */
+    .metrics-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; margin-bottom: 20px; }
+    @media(max-width:900px){ .metrics-grid{grid-template-columns:repeat(2,1fr)} }
+    .metric-card { background: #fff; border-radius: 14px; padding: 20px; border: 1px solid #e5e7eb; cursor: pointer; transition: border-color .15s, box-shadow .15s; user-select: none; }
+    .metric-card:hover { border-color: #c084fc; box-shadow: 0 0 0 3px rgba(192,132,252,.08); }
+    .metric-card.active { border-color: #c084fc; box-shadow: 0 0 0 3px rgba(192,132,252,.12); }
+    .metric-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: .6px; color: #aaa; margin-bottom: 10px; font-weight: 500; }
+    .metric-value { font-size: 1.85rem; font-weight: 700; color: #111; line-height: 1; }
+    .metric-sub { font-size: 0.73rem; color: #bbb; margin-top: 6px; }
 
-        .dashboard {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 24px;
-        }
+    /* Sections */
+    .main-section { background: #fff; border-radius: 14px; border: 1px solid #e5e7eb; margin-bottom: 16px; overflow: hidden; }
+    .section-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px 14px; border-bottom: 1px solid #f0f0f0; }
+    .section-title { font-size: 0.875rem; font-weight: 600; color: #111; }
+    .section-count { font-size: 0.75rem; color: #aaa; }
 
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 32px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
+    /* Logs table */
+    .logs-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .logs-table th { padding: 10px 16px; text-align: left; font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: #aaa; background: #fafafa; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+    .logs-table td { padding: 11px 16px; border-bottom: 1px solid #f8f8f8; vertical-align: middle; }
+    .logs-table tr:last-child td { border-bottom: none; }
+    .logs-table tbody tr { cursor: pointer; transition: background .1s; }
+    .logs-table tbody tr:hover { background: #fafafa; }
+    .logs-table tbody tr.selected { background: #faf5ff; }
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+    .log-time { color: #aaa; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .log-query { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #333; }
+    .log-tokens { font-variant-numeric: tabular-nums; color: #555; white-space: nowrap; }
+    .log-cost { font-variant-numeric: tabular-nums; color: #555; white-space: nowrap; }
+    .log-rt { color: #aaa; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .log-success { text-align: center; }
+    .dot-ok { display:inline-block; width:7px; height:7px; border-radius:50%; background:#10b981; }
+    .dot-fail { display:inline-block; width:7px; height:7px; border-radius:50%; background:#ef4444; }
 
-        .logo h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--accent), #00a8ff);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+    .intent-badge { padding: 3px 8px; border-radius: 20px; font-size: 0.67rem; font-weight: 600; white-space: nowrap; }
+    .intent-ecology  { background:#d1fae5; color:#059669; }
+    .intent-greeting { background:#dbeafe; color:#2563eb; }
+    .intent-offtopic { background:#fee2e2; color:#dc2626; }
+    .intent-identity { background:#ede9fe; color:#7c3aed; }
+    .intent-unknown  { background:#f3f4f6; color:#6b7280; }
 
-        .status-badge {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background: var(--bg-card);
-            border-radius: 20px;
-            font-size: 0.85rem;
-        }
+    .scroll-wrap { max-height: 420px; overflow-y: auto; }
+    .empty-state { text-align: center; padding: 48px; color: #bbb; font-size: 0.85rem; }
+    .error-state { text-align: center; padding: 32px; color: #f87171; font-size: 0.8rem; background: #fff5f5; }
 
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--success);
-            animation: pulse 2s infinite;
-        }
+    /* Two column */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media(max-width:860px){ .two-col{grid-template-columns:1fr} }
 
-        @keyframes pulse {
+    .balance-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #f9f9f9; border-radius: 10px; margin-bottom: 10px; border: 1px solid #f0f0f0; }
+    .balance-service { display: flex; align-items: center; gap: 12px; }
+    .balance-icon { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .gemini-icon { background: linear-gradient(135deg,#4285f4,#34a853); }
+    .azure-icon  { background: linear-gradient(135deg,#0078d4,#50e6ff); }
+    .balance-name { font-size: .875rem; font-weight: 600; color: #111; }
+    .balance-sub  { font-size: .72rem; color: #aaa; margin-top: 2px; }
+    .balance-value { font-size: .95rem; font-weight: 600; color: #111; }
+    .intent-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+    .section-pad { padding: 20px 24px; }
 
-            0%,
-            100% {
-                opacity: 1;
-            }
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.25); backdrop-filter: blur(2px); z-index: 100; align-items: center; justify-content: center; padding: 24px; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #fff; border-radius: 18px; border: 1px solid #e5e7eb; width: 100%; max-width: 640px; max-height: 88vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.12); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px 16px; border-bottom: 1px solid #f0f0f0; position: sticky; top: 0; background: #fff; z-index: 1; }
+    .modal-title { font-size: .9rem; font-weight: 600; }
+    .modal-close { border: none; background: none; cursor: pointer; color: #aaa; font-size: 1.2rem; padding: 4px 8px; border-radius: 6px; transition: background .15s; line-height: 1; }
+    .modal-close:hover { background: #f5f5f5; color: #555; }
+    .modal-body { padding: 20px 24px; }
+    .detail-row { display: grid; grid-template-columns: 130px 1fr; gap: 8px 16px; margin-bottom: 8px; font-size: .82rem; align-items: start; }
+    .detail-label { color: #aaa; font-weight: 500; padding-top: 1px; white-space: nowrap; }
+    .detail-value { color: #111; word-break: break-word; }
+    .detail-value.mono { font-family: monospace; font-size: .78rem; }
+    .text-box { background: #f9f9f9; border: 1px solid #f0f0f0; border-radius: 8px; padding: 12px 14px; font-size: .8rem; color: #333; line-height: 1.6; white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow-y: auto; }
+    .divider { height: 1px; background: #f0f0f0; margin: 16px 0; }
+    .token-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 4px; }
+    .token-box { background: #f9f9f9; border-radius: 10px; padding: 12px; text-align: center; border: 1px solid #f0f0f0; }
+    .token-num { font-size: 1.3rem; font-weight: 700; color: #111; }
+    .token-label { font-size: .68rem; color: #aaa; margin-top: 4px; text-transform: uppercase; letter-spacing: .4px; }
 
-            50% {
-                opacity: 0.5;
-            }
-        }
+    /* Refresh */
+    .refresh-btn { position: fixed; bottom: 24px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: #111; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(0,0,0,.15); transition: background .2s, transform .2s; }
+    .refresh-btn:hover { background: #333; transform: scale(1.05); }
+    .refresh-btn svg { width: 18px; height: 18px; fill: #fff; }
+    @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+    .spinning { animation: spin .8s linear infinite; }
 
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 32px;
-        }
-
-        .metric-card {
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .metric-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-        }
-
-        .metric-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-        }
-
-        .metric-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--accent);
-        }
-
-        .metric-unit {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            margin-left: 4px;
-        }
-
-        .metric-change {
-            font-size: 0.75rem;
-            margin-top: 8px;
-            color: var(--text-secondary);
-        }
-
-        .sections {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-        }
-
-        @media (max-width: 900px) {
-            .sections {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .section {
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .section-title {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .section-title::before {
-            content: '';
-            width: 4px;
-            height: 20px;
-            background: var(--accent);
-            border-radius: 2px;
-        }
-
-        .logs-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .log-item {
-            display: grid;
-            grid-template-columns: 70px 60px 1fr 80px;
-            gap: 12px;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            align-items: center;
-            transition: background 0.2s;
-        }
-
-        .log-item:hover {
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .log-time {
-            color: var(--text-secondary);
-            font-family: monospace;
-        }
-
-        .log-intent {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .intent-ecology {
-            background: rgba(16, 185, 129, 0.2);
-            color: #10b981;
-        }
-
-        .intent-greeting {
-            background: rgba(59, 130, 246, 0.2);
-            color: #3b82f6;
-        }
-
-        .intent-offtopic {
-            background: rgba(239, 68, 68, 0.2);
-            color: #ef4444;
-        }
-
-        .intent-identity {
-            background: rgba(168, 85, 247, 0.2);
-            color: #a855f7;
-        }
-
-        .log-query {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .log-tokens {
-            text-align: right;
-            color: var(--text-secondary);
-            font-family: monospace;
-        }
-
-        .balance-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px;
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            margin-bottom: 12px;
-        }
-
-        .balance-service {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .balance-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-        }
-
-        .gemini-icon {
-            background: linear-gradient(135deg, #4285f4, #34a853);
-        }
-
-        .azure-icon {
-            background: linear-gradient(135deg, #0078d4, #50e6ff);
-        }
-
-        .balance-value {
-            font-size: 1.25rem;
-            font-weight: 600;
-        }
-
-        .refresh-btn {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: var(--accent);
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 20px rgba(0, 212, 170, 0.4);
-            transition: transform 0.2s;
-        }
-
-        .refresh-btn:hover {
-            transform: scale(1.1);
-        }
-
-        .refresh-btn svg {
-            width: 24px;
-            height: 24px;
-            fill: #000;
-        }
-
-        .spinning {
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-secondary);
-        }
-
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-        }
-    </style>
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(0,0,0,.1); border-radius: 2px; }
+  </style>
 </head>
-
 <body>
-    <div class="dashboard">
-        <header>
-            <div class="logo">
-                <h1>🌿 Eco Voice Admin</h1>
-            </div>
-            <div class="status-badge">
-                <span class="status-dot" id="statusDot"></span>
-                <span id="statusText">Connecting...</span>
-            </div>
-        </header>
+<div class="dashboard">
 
-        <div class="metrics-grid" id="metricsGrid">
-            <div class="metric-card">
-                <div class="metric-label">Requests Today</div>
-                <div class="metric-value" id="requestsToday">-</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Tokens Today</div>
-                <div class="metric-value" id="tokensToday">-</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Cost Today</div>
-                <div class="metric-value">$<span id="costToday">-</span></div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">TPM</div>
-                <div class="metric-value" id="tpm">-</div>
-                <div class="metric-change" id="tpmPercent">of 2M limit</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">RPM</div>
-                <div class="metric-value" id="rpm">-</div>
-            </div>
-        </div>
+  <header>
+    <div class="logo">
+      <div class="logo-icon"></div>
+      <div>
+        <h1>ECO EXPERT AI</h1>
+        <span>Admin Dashboard</span>
+      </div>
+    </div>
+    <div class="status-badge">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Connecting...</span>
+    </div>
+  </header>
 
-        <div class="sections">
-            <div class="section">
-                <h2 class="section-title">Recent Queries</h2>
-                <div class="logs-list" id="logsList">
-                    <div class="empty-state">Loading...</div>
-                </div>
-            </div>
+  <!-- Metrics -->
+  <div class="metrics-grid">
+    <div class="metric-card" onclick="openDetail('all')" id="card-requests">
+      <div class="metric-label">Requests Today</div>
+      <div class="metric-value" id="requestsToday">—</div>
+    </div>
+    <div class="metric-card" onclick="openDetail('tokens')" id="card-tokens">
+      <div class="metric-label">Tokens Today</div>
+      <div class="metric-value" id="tokensToday">—</div>
+    </div>
+    <div class="metric-card" onclick="openDetail('cost')" id="card-cost">
+      <div class="metric-label">Cost Today</div>
+      <div class="metric-value">$<span id="costToday">—</span></div>
+    </div>
+    <div class="metric-card" onclick="openDetail('all')" id="card-tpm">
+      <div class="metric-label">TPM</div>
+      <div class="metric-value" id="tpm">—</div>
+      <div class="metric-sub" id="tpmPercent">of 2M limit</div>
+    </div>
+    <div class="metric-card" onclick="openDetail('all')" id="card-rpm">
+      <div class="metric-label">RPM</div>
+      <div class="metric-value" id="rpm">—</div>
+    </div>
+  </div>
 
-            <div class="section">
-                <h2 class="section-title">API Balances</h2>
-                <div id="balances">
-                    <div class="balance-row">
-                        <div class="balance-service">
-                            <div class="balance-icon gemini-icon">G</div>
-                            <div>
-                                <div style="font-weight: 600;">Google Gemini</div>
-                                <div style="font-size: 0.8rem; color: var(--text-secondary);">Free Tier</div>
-                            </div>
-                        </div>
-                        <div class="balance-value" id="geminiBalance">♾️ Unlimited</div>
-                    </div>
-                    <div class="balance-row">
-                        <div class="balance-service">
-                            <div class="balance-icon azure-icon">A</div>
-                            <div>
-                                <div style="font-weight: 600;">Azure Speech</div>
-                                <div style="font-size: 0.8rem; color: var(--text-secondary);">STT + TTS</div>
-                            </div>
-                        </div>
-                        <div class="balance-value" id="azureSpeechStatus">-</div>
-                    </div>
-                </div>
+  <!-- Detail logs panel (shown when card clicked) -->
+  <div class="main-section" id="detailPanel" style="display:none">
+    <div class="section-header">
+      <span class="section-title" id="detailTitle">Barcha so'rovlar</span>
+      <span class="section-count" id="detailCount"></span>
+    </div>
+    <div class="scroll-wrap">
+      <table class="logs-table" id="detailTable">
+        <thead>
+          <tr>
+            <th>Vaqt</th>
+            <th>So'rov</th>
+            <th>Intent</th>
+            <th>Til</th>
+            <th>Model</th>
+            <th>Kirish tok.</th>
+            <th>Chiqish tok.</th>
+            <th>Jami tok.</th>
+            <th>Narx</th>
+            <th>Vaqt (ms)</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="detailBody"></tbody>
+      </table>
+    </div>
+  </div>
 
-                <h2 class="section-title" style="margin-top: 24px;">Intent Distribution</h2>
-                <div id="intentStats" style="display: flex; gap: 12px; flex-wrap: wrap;">
-                    <!-- Filled by JS -->
-                </div>
-            </div>
-        </div>
+  <!-- Bottom two-column -->
+  <div class="two-col">
+    <!-- Recent queries (last 10) -->
+    <div class="main-section">
+      <div class="section-header">
+        <span class="section-title">So'nggi so'rovlar</span>
+        <span class="section-count" id="logsCount"></span>
+      </div>
+      <div class="scroll-wrap">
+        <table class="logs-table">
+          <thead>
+            <tr>
+              <th>Vaqt</th>
+              <th>Intent</th>
+              <th>So'rov</th>
+              <th>Tokenlar</th>
+              <th>Narx</th>
+            </tr>
+          </thead>
+          <tbody id="logsList">
+            <tr><td colspan="5" class="empty-state">Yuklanmoqda...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
-    <button class="refresh-btn" onclick="refreshAll()" title="Refresh">
-        <svg id="refreshIcon" viewBox="0 0 24 24">
-            <path
-                d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
-        </svg>
-    </button>
+    <!-- API + Intent -->
+    <div class="main-section">
+      <div class="section-header"><span class="section-title">API Holati</span></div>
+      <div class="section-pad">
+        <div class="balance-row">
+          <div class="balance-service">
+            <div class="balance-icon gemini-icon">G</div>
+            <div><div class="balance-name">Google Gemini</div><div class="balance-sub">Free Tier</div></div>
+          </div>
+          <div class="balance-value" id="geminiBalance">♾️ Unlimited</div>
+        </div>
+        <div class="balance-row">
+          <div class="balance-service">
+            <div class="balance-icon azure-icon">A</div>
+            <div><div class="balance-name">Azure Speech</div><div class="balance-sub">STT + TTS</div></div>
+          </div>
+          <div class="balance-value" id="azureSpeechStatus">—</div>
+        </div>
+      </div>
+      <div class="section-header" style="margin-top:0"><span class="section-title">Intent taqsimoti</span></div>
+      <div class="section-pad">
+        <div class="intent-grid" id="intentStats"><span style="color:#bbb;font-size:.8rem">Ma'lumot yo'q</span></div>
+      </div>
+    </div>
+  </div>
 
-    <script>
-        const API_BASE = window.location.origin;
+</div>
 
-        async function fetchStats() {
-            try {
-                const res = await fetch(`${API_BASE}/api/admin/stats/summary`);
-                const data = await res.json();
+<!-- Log Detail Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <span class="modal-title">So'rov tafsiloti</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody">Yuklanmoqda...</div>
+  </div>
+</div>
 
-                document.getElementById('requestsToday').textContent = data.today?.requests?.toLocaleString() || '0';
-                document.getElementById('tokensToday').textContent = data.today?.tokens?.toLocaleString() || '0';
-                document.getElementById('costToday').textContent = data.today?.cost_usd?.toFixed(4) || '0.0000';
-                document.getElementById('tpm').textContent = data.realtime?.tpm?.toLocaleString() || '0';
-                document.getElementById('tpmPercent').textContent = `${((data.realtime?.tpm || 0) / 2000000 * 100).toFixed(3)}% of 2M`;
-                document.getElementById('rpm').textContent = data.realtime?.rpm || '0';
+<button class="refresh-btn" onclick="refreshAll()" title="Yangilash">
+  <svg id="refreshIcon" viewBox="0 0 24 24">
+    <path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+  </svg>
+</button>
 
-                // Intent stats
-                const intentStats = document.getElementById('intentStats');
-                intentStats.innerHTML = '';
-                const intents = data.intents || {};
-                for (const [intent, count] of Object.entries(intents)) {
-                    const div = document.createElement('div');
-                    div.className = `log-intent intent-${intent.toLowerCase()}`;
-                    div.textContent = `${intent}: ${count}`;
-                    intentStats.appendChild(div);
-                }
+<script>
+  const API_BASE = (window.location.port === '5173' || window.location.port === '3000')
+    ? 'http://localhost:8002'
+    : window.location.origin;
 
-                updateStatus(true);
-            } catch (e) {
-                console.error('Stats error:', e);
-                updateStatus(false);
-            }
-        }
+  let allLogs = [];
+  let activeCard = null;
 
-        async function fetchLogs() {
-            try {
-                const res = await fetch(`${API_BASE}/api/admin/logs?limit=20`);
-                const data = await res.json();
+  function intentClass(intent) {
+    const i = (intent || 'unknown').toLowerCase();
+    return `intent-badge intent-${i}`;
+  }
 
-                const list = document.getElementById('logsList');
-                if (!data.logs || data.logs.length === 0) {
-                    list.innerHTML = '<div class="empty-state">No queries yet</div>';
-                    return;
-                }
+  function fmt(ts) {
+    if (!ts) return '—';
+    return new Date(ts).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
 
-                list.innerHTML = data.logs.map(log => `
-                    <div class="log-item">
-                        <span class="log-time">${new Date(log.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</span>
-                        <span class="log-intent intent-${(log.intent || 'unknown').toLowerCase()}">${log.intent || '?'}</span>
-                        <span class="log-query">${log.query_text || '—'}</span>
-                        <span class="log-tokens">${log.tokens || 0} tok</span>
-                    </div>
-                `).join('');
-            } catch (e) {
-                console.error('Logs error:', e);
-            }
-        }
+  function fmtDate(ts) {
+    if (!ts) return '—';
+    return new Date(ts).toLocaleString('uz-UZ');
+  }
 
-        async function fetchBalance() {
-            try {
-                const res = await fetch(`${API_BASE}/api/admin/balance`);
-                const data = await res.json();
+  // ── Stats ──────────────────────────────────────────────
+  async function fetchStats() {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/stats/summary`);
+      const data = await res.json();
 
-                const azureEl = document.getElementById('azureSpeechStatus');
-                if (data.azure_speech?.status === 'configured') {
-                    azureEl.textContent = data.azure_speech.region || 'Configured';
-                    azureEl.style.color = 'var(--accent)';
-                } else {
-                    azureEl.textContent = 'Missing';
-                    azureEl.style.color = 'var(--warning)';
-                }
-            } catch (e) {
-                console.error('Balance error:', e);
-            }
-        }
+      document.getElementById('requestsToday').textContent = (data.today?.requests ?? 0).toLocaleString();
+      document.getElementById('tokensToday').textContent   = (data.today?.tokens ?? 0).toLocaleString();
+      document.getElementById('costToday').textContent     = (data.today?.cost_usd ?? 0).toFixed(4);
+      document.getElementById('tpm').textContent           = (data.realtime?.tpm ?? 0).toLocaleString();
+      document.getElementById('tpmPercent').textContent    = `${(((data.realtime?.tpm ?? 0) / 2_000_000) * 100).toFixed(3)}% of 2M`;
+      document.getElementById('rpm').textContent           = data.realtime?.rpm ?? 0;
 
-        function updateStatus(online) {
-            const dot = document.getElementById('statusDot');
-            const text = document.getElementById('statusText');
-            if (online) {
-                dot.style.background = 'var(--success)';
-                text.textContent = 'Online';
-            } else {
-                dot.style.background = 'var(--danger)';
-                text.textContent = 'Offline';
-            }
-        }
+      const intentGrid = document.getElementById('intentStats');
+      intentGrid.innerHTML = '';
+      const intents = data.intents || {};
+      const entries = Object.entries(intents);
+      if (entries.length === 0) {
+        intentGrid.innerHTML = '<span style="color:#bbb;font-size:.8rem">Hali yo\'q</span>';
+      } else {
+        entries.forEach(([intent, count]) => {
+          const d = document.createElement('div');
+          d.className = intentClass(intent);
+          d.textContent = `${intent}: ${count}`;
+          intentGrid.appendChild(d);
+        });
+      }
 
-        async function refreshAll() {
-            const icon = document.getElementById('refreshIcon');
-            icon.classList.add('spinning');
+      updateStatus(true);
+    } catch (e) {
+      console.error('Stats error:', e);
+      updateStatus(false);
+    }
+  }
 
-            await Promise.all([fetchStats(), fetchLogs(), fetchBalance()]);
+  // ── Logs ──────────────────────────────────────────────
+  async function fetchLogs() {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/logs?limit=100`);
+      const data = await res.json();
 
-            setTimeout(() => icon.classList.remove('spinning'), 500);
-        }
+      if (data.error) {
+        renderLogsError(data.error);
+        return;
+      }
 
-        // Initial load
-        refreshAll();
+      allLogs = data.logs || [];
+      renderRecentLogs(allLogs.slice(0, 15));
 
-        // Auto-refresh every 30 seconds
-        setInterval(refreshAll, 30000);
-    </script>
+      // Refresh detail panel if open
+      if (activeCard) openDetail(activeCard, false);
+
+    } catch (e) {
+      renderLogsError(e.message);
+    }
+  }
+
+  function renderRecentLogs(logs) {
+    const tbody = document.getElementById('logsList');
+    document.getElementById('logsCount').textContent = allLogs.length ? `${allLogs.length} ta` : '';
+
+    if (!logs.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Hali so\'rovlar yo\'q</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = logs.map(log => `
+      <tr onclick="openLogModal(${log.id})">
+        <td class="log-time">${fmt(log.timestamp)}</td>
+        <td><span class="${intentClass(log.intent)}">${log.intent || '?'}</span></td>
+        <td class="log-query">${escHtml(log.query_text || '—')}</td>
+        <td class="log-tokens">${(log.tokens || 0).toLocaleString()}</td>
+        <td class="log-cost">$${(log.cost_usd || 0).toFixed(5)}</td>
+      </tr>
+    `).join('');
+  }
+
+  function renderLogsError(msg) {
+    document.getElementById('logsList').innerHTML =
+      `<tr><td colspan="5" class="error-state">⚠️ DB xatosi: ${escHtml(msg)}</td></tr>`;
+  }
+
+  // ── Balance ─────────────────────────────────────────────
+  async function fetchBalance() {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/balance`);
+      const data = await res.json();
+      const azureEl = document.getElementById('azureSpeechStatus');
+      if (data.azure_speech?.status === 'configured') {
+        azureEl.textContent = data.azure_speech.region || 'Configured';
+        azureEl.style.color = '#059669';
+      } else {
+        azureEl.textContent = 'Sozlanmagan';
+        azureEl.style.color = '#d97706';
+      }
+    } catch (e) { console.error('Balance error:', e); }
+  }
+
+  // ── Detail panel (card click) ───────────────────────────
+  function openDetail(mode, scroll = true) {
+    activeCard = mode;
+
+    // Highlight active card
+    document.querySelectorAll('.metric-card').forEach(c => c.classList.remove('active'));
+    const cardMap = { all: 'card-requests', tokens: 'card-tokens', cost: 'card-cost' };
+    const cardEl = document.getElementById(cardMap[mode] || 'card-requests');
+    if (cardEl) cardEl.classList.add('active');
+
+    let sorted = [...allLogs];
+    let title = 'Barcha so\'rovlar';
+
+    if (mode === 'tokens') {
+      sorted.sort((a, b) => (b.tokens || 0) - (a.tokens || 0));
+      title = 'Token bo\'yicha saralangan';
+    } else if (mode === 'cost') {
+      sorted.sort((a, b) => (b.cost_usd || 0) - (a.cost_usd || 0));
+      title = 'Narx bo\'yicha saralangan';
+    }
+
+    document.getElementById('detailTitle').textContent = title;
+    document.getElementById('detailCount').textContent = sorted.length ? `${sorted.length} ta` : '';
+
+    const tbody = document.getElementById('detailBody');
+    if (!sorted.length) {
+      tbody.innerHTML = '<tr><td colspan="11" class="empty-state">Ma\'lumot yo\'q</td></tr>';
+    } else {
+      tbody.innerHTML = sorted.map(log => `
+        <tr onclick="openLogModal(${log.id})">
+          <td class="log-time">${fmt(log.timestamp)}</td>
+          <td class="log-query">${escHtml(log.query_text || '—')}</td>
+          <td><span class="${intentClass(log.intent)}">${log.intent || '?'}</span></td>
+          <td style="color:#666">${log.language || '—'}</td>
+          <td style="color:#666;font-size:.75rem">${log.endpoint || '—'}</td>
+          <td class="log-tokens">—</td>
+          <td class="log-tokens">—</td>
+          <td class="log-tokens">${(log.tokens || 0).toLocaleString()}</td>
+          <td class="log-cost">$${(log.cost_usd || 0).toFixed(5)}</td>
+          <td class="log-rt">${log.response_time_ms ? log.response_time_ms + ' ms' : '—'}</td>
+          <td><span class="${log.success ? 'dot-ok' : 'dot-fail'}"></span></td>
+        </tr>
+      `).join('');
+    }
+
+    const panel = document.getElementById('detailPanel');
+    panel.style.display = 'block';
+    if (scroll) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ── Log detail modal ─────────────────────────────────────
+  async function openLogModal(logId) {
+    document.getElementById('modalOverlay').classList.add('open');
+    document.getElementById('modalBody').innerHTML = '<div style="text-align:center;padding:40px;color:#aaa">Yuklanmoqda...</div>';
+
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/logs/${logId}`);
+      const d = await res.json();
+
+      if (d.error) {
+        document.getElementById('modalBody').innerHTML = `<div class="error-state">Xato: ${escHtml(d.error)}</div>`;
+        return;
+      }
+
+      document.getElementById('modalBody').innerHTML = `
+        <div style="margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <span class="${intentClass(d.intent)}">${d.intent || '?'}</span>
+            <span style="color:#aaa;font-size:.78rem">${fmtDate(d.timestamp)}</span>
+            <span class="${d.success ? 'dot-ok' : 'dot-fail'}"></span>
+          </div>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Endpoint</span>
+          <span class="detail-value mono">${d.endpoint || '—'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Til</span>
+          <span class="detail-value">${d.detected_language || '—'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Model</span>
+          <span class="detail-value mono">${d.model_used || '—'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">IP</span>
+          <span class="detail-value mono">${d.client_ip || '—'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Javob vaqti</span>
+          <span class="detail-value">${d.response_time_ms ? d.response_time_ms + ' ms' : '—'}</span>
+        </div>
+
+        <div class="divider"></div>
+
+        <div style="margin-bottom:10px">
+          <div style="font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;font-weight:600">Tokenlar</div>
+          <div class="token-grid">
+            <div class="token-box">
+              <div class="token-num">${(d.tokens_input || 0).toLocaleString()}</div>
+              <div class="token-label">Kirish</div>
+            </div>
+            <div class="token-box">
+              <div class="token-num">${(d.tokens_output || 0).toLocaleString()}</div>
+              <div class="token-label">Chiqish</div>
+            </div>
+            <div class="token-box">
+              <div class="token-num">${(d.tokens_total || 0).toLocaleString()}</div>
+              <div class="token-label">Jami</div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-row" style="margin-top:10px">
+          <span class="detail-label">Narx</span>
+          <span class="detail-value" style="font-weight:600">$${(d.cost_usd || 0).toFixed(6)}</span>
+        </div>
+
+        <div class="divider"></div>
+
+        <div style="margin-bottom:12px">
+          <div style="font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;font-weight:600">So'rov</div>
+          <div class="text-box">${escHtml(d.query_text || '—')}</div>
+        </div>
+
+        ${d.response_text ? `
+        <div>
+          <div style="font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;font-weight:600">Javob</div>
+          <div class="text-box">${escHtml(d.response_text)}</div>
+        </div>` : ''}
+
+        ${d.error_message ? `
+        <div class="divider"></div>
+        <div class="detail-row">
+          <span class="detail-label">Xato</span>
+          <span class="detail-value" style="color:#ef4444">${escHtml(d.error_message)}</span>
+        </div>` : ''}
+      `;
+    } catch (e) {
+      document.getElementById('modalBody').innerHTML = `<div class="error-state">Xato: ${escHtml(e.message)}</div>`;
+    }
+  }
+
+  function closeModal(e) {
+    if (e && e.target !== document.getElementById('modalOverlay')) return;
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('modalOverlay').classList.remove('open'); });
+
+  function updateStatus(online) {
+    document.getElementById('statusDot').style.background = online ? '#10b981' : '#ef4444';
+    document.getElementById('statusText').textContent = online ? 'Online' : 'Offline';
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  async function refreshAll() {
+    const icon = document.getElementById('refreshIcon');
+    icon.classList.add('spinning');
+    await Promise.all([fetchStats(), fetchLogs(), fetchBalance()]);
+    setTimeout(() => icon.classList.remove('spinning'), 500);
+  }
+
+  refreshAll();
+  setInterval(refreshAll, 30000);
+</script>
 </body>
-
 </html>
