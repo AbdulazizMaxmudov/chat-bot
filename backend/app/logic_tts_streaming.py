@@ -49,6 +49,8 @@ class AzureTTSStreaming:
     def _prepare_text(self, text: str, is_uzbek: bool) -> str:
         text = re.sub(r"^(UZ|RU|Uzbek|Russian):\s*", "", text, flags=re.IGNORECASE)
         text = text.replace("*", "").replace("#", "").replace("`", "")
+        # Telefon raqamlarni TTS dan olib tashlash (raqam ekranda ko'rinadi)
+        text = re.sub(r'(?:📞\s*)?(?:Tel:?\s*)?\+?998[\d\s\-]{9,}', 'ko\'rsatilgan raqamga', text)
 
         if not is_uzbek:
             return text

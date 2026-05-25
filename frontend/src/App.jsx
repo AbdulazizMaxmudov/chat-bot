@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+﻿import { useState, useRef, useEffect } from 'react';
 import { Mic, ArrowUp, StopCircle, Loader2, Globe, Instagram, Youtube, Square, Volume2, VolumeX, Bot, MessageSquare, MapPin, Menu, X, Leaf, FileText, Scale, HelpCircle, Sun, Moon, Palette } from 'lucide-react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Avatar from './components/Avatar';
@@ -107,6 +107,18 @@ function App() {
     document.documentElement.classList.toggle('dark', isDark && selectedStyle === 'style1');
   }, [isDark, selectedStyle]);
 
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const handleOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, [isMenuOpen]);
   const mediaRecorderRef = useRef(null);
   const chatEndRef = useRef(null);
   const audioPlayerRef = useRef(new Audio());
@@ -661,17 +673,17 @@ function App() {
         )}
       </AnimatePresence>
 
-      {/* Avatar + Greeting — avatar har doim, matn faqat welcome rejimida */}
+      {/* Avatar + Greeting вЂ” avatar har doim, matn faqat welcome rejimida */}
       {!isLoading && !shouldEnterFocusMode && (
         <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none pb-52">
           {showRobot && (
             selectedStyle === 'style3' ? (
-              /* Style3: video avatar — har doim katta, kichraymaydi */
-              <div className="w-[760px] h-[580px] sm:w-[760px] sm:h-[700px] mb-2 ml-10">
+              /* Style3: video avatar вЂ” har doim katta, kichraymaydi */
+              <div style={{ width: 'min(60vw, 420px)', aspectRatio: '4/5', marginTop: '60px' }}>
                 <VideoAvatar avatarState={avatarState} />
               </div>
             ) : (
-              /* Style1/2: lottie — chat rejimida kichrayadi */
+              /* Style1/2: lottie вЂ” chat rejimida kichrayadi */
               <motion.div
                 animate={{
                   scale: isWelcomeView ? 1 : 0.5,
@@ -693,7 +705,7 @@ function App() {
                 transition={{ duration: 0.3 }}
                 className="text-center px-4 ml-10"
               >
-                {/* Matn orqasida shaffof podlozhka — fon rasmida ko'rinishi uchun */}
+                {/* Matn orqasida shaffof podlozhka вЂ” fon rasmida ko'rinishi uchun */}
                 <div className={isImg ? 'inline-block bg-black/35 backdrop-blur-sm rounded-2xl px-5 py-3' : ''}>
                   <p className={`text-sm sm:text-base mb-1 ${isImg ? 'text-white/80' : 'text-gray-400 dark:text-gray-500'}`}>
                     Ekologiya bo'yicha maslahat
@@ -737,7 +749,7 @@ function App() {
             </div>
           )}
           {/* Menu */}
-          <div className="relative">
+          <div className="relative" ref={menuRef}>
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className={`p-2 rounded-full border transition-colors touch-manipulation ${
@@ -748,7 +760,6 @@ function App() {
             >
               {isMenuOpen ? <X size={15} /> : <Menu size={15} />}
             </button>
-            {isMenuOpen && <div className="fixed inset-0 z-[55]" onClick={() => setIsMenuOpen(false)} />}
             <AnimatePresence>
               {isMenuOpen && (
                 <motion.div
@@ -758,7 +769,7 @@ function App() {
                     isImg ? 'bg-black/60 backdrop-blur-xl border-white/15' : 'bg-white dark:bg-[#1c1c1e] border-gray-100 dark:border-gray-700'
                   }`}
                 >
-                  {/* Dark mode — only style1 */}
+                  {/* Dark mode вЂ” only style1 */}
                   {!isImg && (
                     <button onClick={() => setIsDark(d => !d)}
                       className="w-full px-3 py-2.5 rounded-xl flex items-center justify-between text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
@@ -828,13 +839,14 @@ function App() {
       )}
 
       {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto px-3 sm:px-6 pb-52 space-y-3 pt-[60px]" onScroll={handleScroll}>
+      <div className="relative z-[11] flex-1 overflow-y-auto px-3 sm:px-6 pb-52 space-y-3" style={{ paddingTop: '56px' }} onScroll={handleScroll}>
         <AnimatePresence>
           {messages.map((msg, i) => {
             if (!msg.text) return null;
             return (
               <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                style={i === 0 ? { marginTop: '30px' } : undefined}>
                 <MessageBubble text={msg.text} role={msg.role} />
               </motion.div>
             );
@@ -853,7 +865,7 @@ function App() {
         }`}>
           <div className="px-4 pt-3 pb-1 flex items-center gap-1.5">
             <span className={`text-[11px] leading-none ${isImg ? 'text-white/50' : 'text-gray-400 dark:text-gray-500'}`}>Davlat ekologik ekspertizasi markazi</span>
-            <span className={`text-[11px] ${isImg ? 'text-white/25' : 'text-gray-300 dark:text-gray-600'}`}>•</span>
+            <span className={`text-[11px] ${isImg ? 'text-white/25' : 'text-gray-300 dark:text-gray-600'}`}>вЂў</span>
             <span className={`text-[11px] font-medium leading-none transition-colors ${avatarState !== 'idle' ? 'text-purple-400' : isImg ? 'text-white/35' : 'text-gray-400 dark:text-gray-500'}`}>
               {STATUS_TEXT[avatarState]}
             </span>
@@ -887,7 +899,7 @@ function App() {
                     isImg ? 'border-white/20 text-white/70 hover:bg-white/10' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                   }`}>
                   <Globe size={12} />
-                  <span className="font-medium">{selectedLang === 'uz' ? "O'zbekcha" : 'Русский'}</span>
+                  <span className="font-medium">{selectedLang === 'uz' ? "O'zbekcha" : 'Р СѓСЃСЃРєРёР№'}</span>
                 </button>
                 <div className="flex items-center gap-1.5">
                   {isResponseActive && (
@@ -955,3 +967,4 @@ function App() {
 }
 
 export default App;
+

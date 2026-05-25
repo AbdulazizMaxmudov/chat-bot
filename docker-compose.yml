@@ -5,6 +5,8 @@ services:
     container_name: eco-voice-web
     ports:
       - "8003:80"
+    environment:
+      BACKEND_HOST: backend
     depends_on:
       - backend
     restart: always
@@ -22,6 +24,7 @@ services:
       GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
     volumes:
       - ./backend/541.txt:/app/541.txt
+      - ./backend/filiallar.txt:/app/filiallar.txt
       - ./backend/app:/app/app
     depends_on:
       postgres:

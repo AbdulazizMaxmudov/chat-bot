@@ -62,7 +62,7 @@ const MessageBubble = ({ text, role }) => {
         <button
           onClick={handleCopy}
           className="absolute top-2 right-2 p-1 rounded-md text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
-          title="Nusxalash"
+          title="Nusxalash sdfvfsdv"
         >
           {copied ? <Check size={13} className="text-green-500" /> : <Copy size={13} />}
         </button>

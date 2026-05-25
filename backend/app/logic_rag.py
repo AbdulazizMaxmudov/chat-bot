@@ -256,10 +256,11 @@ FAREWELL_PATTERNS = [
 
 # Knowledge base files — all legal documents for RAG
 KNOWLEDGE_BASE_FILES = [
-    "541.txt",     # VM 541-sonli qarori (Постановление КМ №541)
-    "1036.txt",    # Ekologik ekspertiza qonuni (Закон об экологической экспертизе, 2024)
-    "14.txt",      # Ekologik normativlar nizomi (Порядок экологических нормативов)
-    "1.txt",       # Faoliyat turlari ro'yxati — ilova (Приложение — список видов деятельности)
+    "541.txt",        # VM 541-sonli qarori (Постановление КМ №541)
+    "1036.txt",       # Ekologik ekspertiza qonuni (Закон об экологической экспертизе, 2024)
+    "14.txt",         # Ekologik normativlar nizomi (Порядок экологических нормативов)
+    "1.txt",          # Faoliyat turlari ro'yxati — ilova (Приложение — список видов деятельности)
+    "filiallar.txt",  # Markaz filiallari — manzillar, direktorlar, telefon raqamlar
 ]
 
 class BrainSystem:
@@ -501,7 +502,7 @@ class BrainSystem:
 ОТВЕТ:
 """
         else:
-            offtopic_note_uz = "MUHIM: Agar savol ekologiya, qurilish, ekspertiza, obyektlar toifasi, qonunlar yoki normativ hujjatlarga ALOQADOR BO'LMASA — ALBATTA javob ber: 'Kechirasiz, men bu savolga javob bera olmayman. Men Vazirlar Mahkamasining 541 hamda 1036-qarorlariga muvofiq javob beraman. Hohlasangiz operatorlar bilan bog\\'laning: 📞 Tel: +998 71 203 03 04' Kontekstdagi ma'lumotlarni ALOQASIZ savollarga javob berish uchun ISHLATMA."
+            offtopic_note_uz = "MUHIM: Agar savol ekologiya, qurilish, ekspertiza, obyektlar toifasi, qonunlar yoki normativ hujjatlarga ALOQADOR BO'LMASA — ALBATTA javob ber: 'Kechirasiz, men bu savolga javob bera olmayman. Men O\\'zbekiston Respublikasining 1036-son Qonuni hamda Vazirlar Mahkamasining 541-qaroriga asoslanib javob beraman. Hohlasangiz operatorlar bilan bog\\'laning: 📞 Tel: +998712030304' Kontekstdagi ma'lumotlarni ALOQASIZ savollarga javob berish uchun ISHLATMA."
             if lang == "UZ_CYRL":
                 offtopic_note_uz = "Агар савол олдинги суҳбатнинг давоми ёки аниқлаштириш бўлса ва контекстдан тушуниш мумкин бўлса — нормал жавоб бер. Агар савол ЯҚҚОЛ экология, қурилиш, экспертиза ёки норматившларга АЛОҚАДОР БЎЛМАСА — жавоб бер: 'Kechirasiz, men bu savolga javob bera olmayman. Men Vazirlar Mahkamasining 541 hamda 1036-qarorlariga muvofiq javob beraman. Hohlasangiz operatorlar bilan bog\\'laning: 📞 Tel: +998 71 203 03 04'"
             lang_instruction = "JAVOBNI FAQAT O'ZBEK TILIDA (LOTIN ALIFBOSIDA) BER." if lang != "UZ_CYRL" else "ЖАВОБНИ ФАҚАТ ЎЗБЕК ТИЛИДА (КИРИЛЛ АЛИФБОСИДА) БЕР."
@@ -614,7 +615,7 @@ JAVOB:
 """
         else:
             lang_instruction = "JAVOBNI FAQAT O'ZBEK TILIDA (LOTIN ALIFBOSIDA) BER." if lang != "UZ_CYRL" else "ЖАВОБНИ ФАҚАТ ЎЗБЕК ТИЛИДА (КИРИЛЛ АЛИФБОСИДА) БЕР."
-            offtopic_note_uz = "MUHIM: Agar savol ekologiya, qurilish, ekspertiza, obyektlar toifasi, qonunlar yoki normativ hujjatlarga ALOQADOR BO'LMASA — ALBATTA javob ber: 'Kechirasiz, men bu savolga javob bera olmayman. Men Vazirlar Mahkamasining 541 hamda 1036-qarorlariga muvofiq javob beraman. Hohlasangiz operatorlar bilan bog\\'laning: 📞 Tel: +998 71 203 03 04' Kontekstdagi ma'lumotlarni ALOQASIZ savollarga javob berish uchun ISHLATMA."
+            offtopic_note_uz = "MUHIM: Agar savol ekologiya, qurilish, ekspertiza, obyektlar toifasi, qonunlar yoki normativ hujjatlarga ALOQADOR BO'LMASA — ALBATTA javob ber: 'Kechirasiz, men bu savolga javob bera olmayman. Men O\\'zbekiston Respublikasining 1036-son Qonuni hamda Vazirlar Mahkamasining 541-qaroriga asoslanib javob beraman. Hohlasangiz operatorlar bilan bog\\'laning: 📞 Tel: +998712030304' Kontekstdagi ma'lumotlarni ALOQASIZ savollarga javob berish uchun ISHLATMA."
             if lang == "UZ_CYRL":
                 offtopic_note_uz = "Агар савол олдинги суҳбатнинг давоми ёки аниқлаштириш бўлса ва контекстдан тушуниш мумкин бўлса — нормал жавоб бер. Агар савол ЯҚҚОЛ экология, қурилиш, экспертиза ёки норматившларга АЛОҚАДОР БЎЛМАСА — жавоб бер: 'Kechirasiz, men bu savolga javob bera olmayman. Men Vazirlar Mahkamasining 541 hamda 1036-qarorlariga muvofiq javob beraman. Hohlasangiz operatorlar bilan bog\\'laning: 📞 Tel: +998 71 203 03 04'"
 

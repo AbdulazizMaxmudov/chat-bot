@@ -13,7 +13,7 @@ RUN npm install
 COPY . .
 
 # Build the project
-RUN npm run dev
+RUN npm run build
 
 # 2. Production Stage
 FROM nginx:alpine
@@ -22,8 +22,8 @@ FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY --from=build /app/admin.html /usr/share/nginx/html/admin.html
 
-# Copy nginx config
-COPY nginx.app.conf /etc/nginx/conf.d/default.conf
+# Copy nginx config as template — BACKEND_HOST env var is substituted at container start
+COPY nginx.app.conf /etc/nginx/templates/default.conf.template
 
 EXPOSE 80
 
